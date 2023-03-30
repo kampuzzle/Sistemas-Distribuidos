@@ -1,7 +1,6 @@
 #python version 3.10
 import multiprocessing
 import sys
-import time
 
 
 def merge(vector1, vector2, conn):
@@ -41,14 +40,10 @@ def bubble_sort(vector, conn):
 if __name__ == '__main__':
     
     # get vector as args from command line
-    # vector = [int(x) for x in sys.argv[2:]]
+    vector = [int(x) for x in sys.argv[2:]]
 
     # get the amount of threads to use from command line
-    # threads = int(sys.argv[1])
-
-    vector = [1,2,7,23,5,6,3,8,9,10,11,12,13,14,15,16]
-
-    threads = 6
+    threads = int(sys.argv[1])
 
     vector_separated = [vector[i::threads] for i in range(threads)]
     processes = []
