@@ -9,3 +9,9 @@ Assim, após clonar o repositório, navegue para a pasta especifica do laborató
 * arquivo `paralelismo.py`, contendo todo o código do projeto;
 
 * arquivo `README.MD`, contendo informações de como executar o programa, detalhamento das funções e bibliotecas usadas e o relatório técnico;
+
+
+
+perguntas: 
+
+dado um numero impar, é para o primeiro vetor ter mais um elemento ou o ultimo? é para o ultimo vetor ter um elemento so? 
