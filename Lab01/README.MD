@@ -198,5 +198,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 
 # Conclusão
-
+g
 O programa foi implementado usando o módulo multiprocessing do Python. O programa foi testado em um computador com 36 núcleos e 72 threads e em um computador com 6 núcleos e 12 threads. Os resultados mostram que, até um certo ponto, é vantajoso em questão de tempo dividir o processamento em mais núcleos. No entanto, a partir de um certo ponto, o tempo de execução começa a aumentar. Isso ocorre porque o tempo de comunicação entre os processos também aumenta, o que pode ser visto no gráfico de desempenho para o aumento do núemro de threads.
+
+Também é possível dizer que para vetores pequenos, dividir o processamento em threads não é vantajoso, pois o tempo de comunicação entre os processos é maior que o tempo de processamento. No entanto, para vetores grandes, dividir o processamento em threads é vantajoso, pois o tempo de comunicação entre os processos é menor que o tempo de processamento. 
