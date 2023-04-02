@@ -15,13 +15,13 @@ def generate_random_vector(size):
 
 
 if __name__ == '__main__':
-    vector_sizes = [14, 100, 1000, 10000, 100000]
+    vector_sizes = [14, 100, 1000, 10000, 10000]
     thread_counts = [1, 2, 4, 6, 8,10,12,14]
 
    
-    with open('results.csv', 'w', newline='') as csvfile:
+    with open('results_2.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Tamanho do vetor", "Thread Count", "Tempo (s)"])
+        writer.writerow(["size", "thread_num", "time"])
 
         for size in vector_sizes:
             print(f"Sorting vector of size {size} with {thread_counts} threads")
