@@ -22,6 +22,8 @@ def merge(vector1, vector2, conn):
     while j < len(vector2):
         vector_merged.append(vector2[j])
         j += 1
+
+    print("Thread: ",multiprocessing.current_process().name, "merged: ", len(vector_merged)) 
     conn.send(vector_merged)
     conn.close()
 
