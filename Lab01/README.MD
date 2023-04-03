@@ -4,20 +4,17 @@
 
 Dentro da pasta Lab01, abra o terminal e execute o seguinte comando
 
-``
+```
 python3 paralelismo.py num_threads vetor
-
-`
+```
 
 Onde `num_threads` é o número de threads nas quais serão divididas o vetor, e `vetor` é a sequencia de todos os números do vetor, separados por espaço
 
 Por exemplo:
-    
-    ````
 
-
+```
 python3 ordenacao.py 4 10 8 7 6 5 4 3 2 1 9
-    ````
+```
 
 
 Isso irá ordenar o vetor `[10, 8, 7, 6, 5, 4, 3, 2, 1, 9]` usando `quatro` threads.
@@ -56,6 +53,7 @@ A função principal recebe dois argumentos da linha de comando: o número de th
 A função principal usa o módulo multiprocessing para criar processos e a classe Pipe para criar um pipe entre os processos pai e filho para comunicação. O método start é usado para iniciar os processos e o método join é usado para aguardar a conclusão dos processos.
 
 
+---
 # Resultados 
 
 ## Resultados com computador de 36 núcleos, 72 threads
@@ -115,11 +113,9 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 | 12 | 0.113s |
 | 14 | 0.101s |
 
-
-
+---
 
 ## Resultados com computador com somente 6 núcleos, 12 threads
-
 
 ### Vetor de tamanho 14
 
@@ -135,7 +131,6 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 | 14 | 0.014s |
 
 ### Vetor de tamanho 100
-
 
 | Número de Threads | Tempo de Execução |
 |:-----------------:|:-----------------:|
@@ -174,8 +169,9 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 | 12 | 0.102327s |
 | 14 | 0.117027s |
 
+---
 
-# gráfico de desempenho para computador com 36 núcleos, 72 threads
+## gráfico de desempenho para computador com 36 núcleos, 72 threads
 
 ![Gráfico de desempenho](imagens/size-14.png)
 
@@ -185,7 +181,9 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ![Gráfico de desempenho](imagens/size-10000.png)
 
-#gŕafico de desempenho para computador com 6 núcleos, 12 threads
+---
+
+## gŕafico de desempenho para computador com 6 núcleos, 12 threads
 
 ![Gráfico de desempenho](imagens/size-2-14.png)
 
@@ -198,7 +196,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 
 # Conclusão
-g
+
 O programa foi implementado usando o módulo multiprocessing do Python. O programa foi testado em um computador com 36 núcleos e 72 threads e em um computador com 6 núcleos e 12 threads. Os resultados mostram que, até um certo ponto, é vantajoso em questão de tempo dividir o processamento em mais núcleos. No entanto, a partir de um certo ponto, o tempo de execução começa a aumentar. Isso ocorre porque o tempo de comunicação entre os processos também aumenta, o que pode ser visto no gráfico de desempenho para o aumento do núemro de threads.
 
 Também é possível dizer que para vetores pequenos, dividir o processamento em threads não é vantajoso, pois o tempo de comunicação entre os processos é maior que o tempo de processamento. No entanto, para vetores grandes, dividir o processamento em threads é vantajoso, pois o tempo de comunicação entre os processos é menor que o tempo de processamento. 
