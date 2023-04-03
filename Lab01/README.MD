@@ -13,7 +13,7 @@ Onde `num_threads` é o número de threads nas quais serão divididas o vetor, e
 Por exemplo:
 
 ```
-python3 ordenacao.py 4 10 8 7 6 5 4 3 2 1 9
+python3 paralelismo.py 4 10 8 7 6 5 4 3 2 1 9
 ```
 
 
@@ -28,6 +28,18 @@ As seguintes bibliotecas são utilizadas no script:
 `multiprocessing`: fornece suporte para criação de processos. Usamos sua função `Pipe()` para criar um canal de comunição entre processo pai e filho, para que o processo filho envie o vetor ordenado ao pai. Usamos sua função `Process(target, args)` para criar um processo, enviando como parâmetro a assinatura da função que será paralelizada e os argumentos que a função irá utilizar.
 
 `sys`: fornece acesso a algumas variáveis usadas ou mantidas pelo interpretador e a funções que interagem fortemente com o interpretador. A usamos para receber por parâmetro os valores do número de threads e o vetor.
+
+---
+
+## Metodologia de implementação
+
+Inicialmente, escolhemos o bubble sort para a ordenação dos processos, já que não é um método de ordenação tão eficiente, então conseguiríamos ver com mais clareza a diferença de tempo entre os testes, sem a interferência de um método muito rápido de ordenação.
+
+Em seguida, decidimos por utilizar processos em vez de threads, pois como a memória dos processos não é compartilhada, caso um falhe, os outros processos não são afetados. Além disso, na ideia de distribuição de sistemas, os processos não precisam rodar na mesma máquina, o que é uma vantagem caso exista a necessidade de escalabilidade do código, pois diferentes máquinas podem ordenar os processos e retornar seus resultados mais rapidamente. 
+Para a comunicação entre os processos filhos criados e o processo pai, criamos um pipe, no qual o filho envia o vetor ordenado para o pai e termina seu processo.
+
+Assim, após escolher o método de ordenação e a forma que o vetor será separado, seguimos para a implementação em si do código. Como foi descrito anteriormente, a quantidade de processos desejados é criada e ordenada separadamente, utilizando o bubble sort. Após o retorno de todos os filhos, temos vários vetores ordenados separadamente, porém ainda precisamos juntá-los.
+Para isso, a cada dois vetores que foram retornados dos filhos, chamamos uma função para fazer o merge entre eles, sem que haja a necessidade de outro algoritmo de ordenação. Se a quantidade de vetores for ímpar, esperamos a próxima iteração de separações de duplas de vetores para incluí-lo, até que apenas um vetor exista. Essa separação de duplas ocorre da esquerda para a direita, pois removemos os primeiros vetores da lista para que ocorra o merge entre eles. Por fim, o vetor incluindo todos os subvetores estará completamente ordenado.
 
 ---
 
