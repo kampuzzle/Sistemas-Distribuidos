@@ -4,7 +4,7 @@ import sys
 from multiprocessing import cpu_count
 import csv
 
-from paralelismo_v2 import sort_vector
+from paralelismo import sort_vector
 
 
 def generate_random_vector(size):
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     thread_counts = [1, 2, 4, 6, 8,10,12,14]
 
    
-    with open('results_2.csv', 'w', newline='') as csvfile:
+    with open('data/results_2.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["size", "thread_num", "time"])
 

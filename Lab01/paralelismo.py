@@ -1,7 +1,6 @@
-#python version 3.10
 import multiprocessing
 import sys
-
+import time
 
 def merge(vector1, vector2, conn):
     """
@@ -35,19 +34,17 @@ def bubble_sort(vector, conn):
             if vector[j] > vector[j+1]:
                 vector[j], vector[j+1] = vector[j+1], vector[j]
     conn.send(vector)
+    #print the number of the thread and the number of elements sorted
+    print("Thread: ",multiprocessing.current_process().name, "sorted: ", len(vector))
     conn.close()
 
-if __name__ == '__main__':
-    
-    # get vector as args from command line
-    vector = [int(x) for x in sys.argv[2:]]
+   
 
-    # get the amount of threads to use from command line
-    threads = int(sys.argv[1])
+def sort_vector(vector, thread_count):
+    vector_separated = [vector[i::thread_count] for i in range(thread_count)]
 
-    vector_separated = [vector[i::threads] for i in range(threads)]
     processes = []
-    for i in range(threads):
+    for i in range(thread_count):
         parent_conn, child_conn = multiprocessing.Pipe()
         process = multiprocessing.Process(target=bubble_sort, args=(vector_separated[i], child_conn))
         processes.append(process)
@@ -58,36 +55,31 @@ if __name__ == '__main__':
 
     for process in processes:
         process.join()
-    
-    sorted_vector = [process.vector.recv() for process in processes]
-    print("Vector separated: ", sorted_vector)
 
+    sorted_vector = [process.vector.recv() for process in processes]
 
     while len(sorted_vector) > 1:
-        vector_of_vectors = []   
+        vector_of_vectors = []
         while len(sorted_vector) > 1:
             vector1 = sorted_vector.pop(0)
             vector2 = sorted_vector.pop(0)
             vector_of_vectors.append([vector1, vector2])
-        if (len(sorted_vector) == 1):
-            vector_of_vectors.append(sorted_vector[0])    
-        print("Vector separated: ", vector_of_vectors)
+        if len(sorted_vector) == 1:
+            vector_of_vectors.append(sorted_vector[0])
+
 
         processes = []
-
         last_vector = []
 
         for i in range(len(vector_of_vectors)):
             parent_conn, child_conn = multiprocessing.Pipe()
-            if type(vector_of_vectors[i][0]) == list: 
+            if i < len(vector_of_vectors) and type(vector_of_vectors[i][0]) == list:
                 process = multiprocessing.Process(target=merge, args=(vector_of_vectors[i][0], vector_of_vectors[i][1], child_conn))
-        
                 processes.append(process)
                 processes[i].vector = parent_conn
             else:
                 last_vector = vector_of_vectors[i]
 
-        
         for process in processes:
             process.start()
 
@@ -97,6 +89,20 @@ if __name__ == '__main__':
         sorted_vector = [process.vector.recv() for process in processes]
         if last_vector != []:
             sorted_vector.append(last_vector)
-        print("Vector merged: ", sorted_vector)
 
 
+    return sorted_vector[0]
+if __name__ == '__main__':
+    
+    # get vector as args from command line
+    vector = [int(x) for x in sys.argv[2:]]
+
+    # get the amount of threads to use from command line
+    threads = int(sys.argv[1])
+
+    start_time = time.time()
+    sorted_vector = sort_vector(vector, threads)
+    end_time = time.time()
+
+    print(f"Sorted vector with {threads} threads: {sorted_vector}")
+    print(f"Time taken to sort: {end_time - start_time}")
