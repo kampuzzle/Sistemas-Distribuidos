@@ -185,25 +185,25 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ## gráfico de desempenho para computador com 36 núcleos, 72 threads
 
-![Gráfico de desempenho](imagens/size-14.png)
+![Gráfico de desempenho](data/size-14.png)
 
-![Gráfico de desempenho](imagens/size-100.png)
+![Gráfico de desempenho](data/size-100.png)
 
-![Gráfico de desempenho](imagens/size-1000.png)
+![Gráfico de desempenho](data/size-1000.png)
 
-![Gráfico de desempenho](imagens/size-10000.png)
+![Gráfico de desempenho](data/size-10000.png)
 
 ---
 
 ## gŕafico de desempenho para computador com 6 núcleos, 12 threads
 
-![Gráfico de desempenho](imagens/size-2-14.png)
+![Gráfico de desempenho](data/size-2-14.png)
 
-![Gráfico de desempenho](imagens/size-2-100.png)
+![Gráfico de desempenho](data/size-2-100.png)
 
-![Gráfico de desempenho](imagens/size-2-1000.png)
+![Gráfico de desempenho](data/size-2-1000.png)
 
-![Gráfico de desempenho](imagens/size-2-10000.png)
+![Gráfico de desempenho](data/size-2-10000.png)
 
 
 
