@@ -185,13 +185,13 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ## gráfico de desempenho para computador com 36 núcleos, 72 threads
 
-![Gráfico de desempenho](data/size-14.png)
+![Gráfico de desempenho](data/size_14.png)
 
-![Gráfico de desempenho](data/size-100.png)
+![Gráfico de desempenho](data/size_100.png)
 
-![Gráfico de desempenho](data/size-1000.png)
+![Gráfico de desempenho](data/size_1000.png)
 
-![Gráfico de desempenho](data/size-10000.png)
+![Gráfico de desempenho](data/size_10000.png)
 
 ---
 
