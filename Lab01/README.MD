@@ -5,10 +5,10 @@
 Dentro da pasta Lab01, abra o terminal e execute o seguinte comando
 
 ```
-python3 paralelismo.py num_threads vetor
+python3 paralelismo.py num_processos vetor
 ```
 
-Onde `num_threads` é o número de threads nas quais serão divididas o vetor, e `vetor` é a sequencia de todos os números do vetor, separados por espaço
+Onde `num_processos` é o número de processos nos quais serão divididas o vetor, e `vetor` é a sequencia de todos os números do vetor, separados por espaço
 
 Por exemplo:
 
@@ -17,7 +17,7 @@ python3 paralelismo.py 4 10 8 7 6 5 4 3 2 1 9
 ```
 
 
-Isso irá ordenar o vetor `[10, 8, 7, 6, 5, 4, 3, 2, 1, 9]` usando `quatro` threads.
+Isso irá ordenar o vetor `[10, 8, 7, 6, 5, 4, 3, 2, 1, 9]` usando `quatro` processos.
 
 ---
 
@@ -27,7 +27,7 @@ As seguintes bibliotecas são utilizadas no script:
 
 `multiprocessing`: fornece suporte para criação de processos. Usamos sua função `Pipe()` para criar um canal de comunição entre processo pai e filho, para que o processo filho envie o vetor ordenado ao pai. Usamos sua função `Process(target, args)` para criar um processo, enviando como parâmetro a assinatura da função que será paralelizada e os argumentos que a função irá utilizar.
 
-`sys`: fornece acesso a algumas variáveis usadas ou mantidas pelo interpretador e a funções que interagem fortemente com o interpretador. A usamos para receber por parâmetro os valores do número de threads e o vetor.
+`sys`: fornece acesso a algumas variáveis usadas ou mantidas pelo interpretador e a funções que interagem fortemente com o interpretador. A usamos para receber por parâmetro os valores do número de processos e o vetor.
 
 ---
 
@@ -60,7 +60,7 @@ Irá ordenar um vetor em ordem crescente. A função recebe uma conexão com o p
 
 ## Função Principal
 
-A função principal recebe dois argumentos da linha de comando: o número de threads a ser usado e o vetor a ser ordenado. O vetor é dividido em subvetores e cada subvetor é ordenado usando o algoritmo bubble sort em um processo separado. Os subvetores ordenados são então mesclados usando o algoritmo merge até que um único vetor ordenado seja obtido. O vetor final ordenado é impresso no console.
+A função principal recebe dois argumentos da linha de comando: o número de processos a ser usado e o vetor a ser ordenado. O vetor é dividido em subvetores e cada subvetor é ordenado usando o algoritmo bubble sort em um processo separado. Os subvetores ordenados são então mesclados usando o algoritmo merge até que um único vetor ordenado seja obtido. O vetor final ordenado é impresso no console.
 
 A função principal usa o módulo multiprocessing para criar processos e a classe Pipe para criar um pipe entre os processos pai e filho para comunicação. O método start é usado para iniciar os processos e o método join é usado para aguardar a conclusão dos processos.
 
@@ -70,10 +70,10 @@ A função principal usa o módulo multiprocessing para criar processos e a clas
 
 ## Resultados com computador de 36 núcleos, 72 threads
 
-Abaixo estão os resultados obtidos ao executar o programa com diferentes números de threads e diferentes tamanhos de vetor. 
+Abaixo estão os resultados obtidos ao executar o programa com diferentes números de processos e diferentes tamanhos de vetor. 
 
 ### Vetor de tamanho 14 
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 0.007s |
 | 2 | 0.007s |
@@ -86,7 +86,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 
 ### Vetor de tamanho 100
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 0.005s |
 | 2 | 0.007s |
@@ -100,7 +100,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 
 ### Vetor de tamanho 1000
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 0.095s |
 | 2 | 0.048s |
@@ -114,7 +114,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ### Vetor de tamanho 10000
 
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 8.867s |
 | 2 | 2.266s |
@@ -131,7 +131,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ### Vetor de tamanho 14
 
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 0.007s |
 | 2 | 0.002s |
@@ -144,7 +144,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ### Vetor de tamanho 100
 
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 0.0020s |
 | 2 | 0.0035s |
@@ -157,7 +157,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ### Vetor de tamanho 1000
 
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 0.063401s |
 | 2 |0.01929s |
@@ -170,7 +170,7 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 ### Vetor de tamanho 10000
 
-| Número de Threads | Tempo de Execução |
+| Número de Processos | Tempo de Execução |
 |:-----------------:|:-----------------:|
 | 1 | 6.47178s |
 | 2 |1.89784s |
@@ -209,6 +209,6 @@ Abaixo estão os resultados obtidos ao executar o programa com diferentes númer
 
 # Conclusão
 
-O programa foi implementado usando o módulo multiprocessing do Python. O programa foi testado em um computador com 36 núcleos e 72 threads e em um computador com 6 núcleos e 12 threads. Os resultados mostram que, até um certo ponto, é vantajoso em questão de tempo dividir o processamento em mais núcleos. No entanto, a partir de um certo ponto, o tempo de execução começa a aumentar. Isso ocorre porque o tempo de comunicação entre os processos também aumenta, o que pode ser visto no gráfico de desempenho para o aumento do núemro de threads.
+O programa foi implementado usando o módulo multiprocessing do Python. O programa foi testado em um computador com 36 núcleos e 72 threads e em um computador com 6 núcleos e 12 threads. Os resultados mostram que, até um certo ponto, é vantajoso em questão de tempo dividir o processamento em mais núcleos. No entanto, a partir de um certo ponto, o tempo de execução começa a aumentar. Isso ocorre porque o tempo de comunicação entre os processos também aumenta, o que pode ser visto no gráfico de desempenho para o aumento do núemro de processos.
 
-Também é possível dizer que para vetores pequenos, dividir o processamento em threads não é vantajoso, pois o tempo de comunicação entre os processos é maior que o tempo de processamento. No entanto, para vetores grandes, dividir o processamento em threads é vantajoso, pois o tempo de comunicação entre os processos é menor que o tempo de processamento. 
+Também é possível dizer que para vetores pequenos, dividir o processamento em processos não é vantajoso, pois o tempo de comunicação entre os processos é maior que o tempo de processamento. No entanto, para vetores grandes, dividir o processamento em processos é vantajoso, pois o tempo de comunicação entre os processos é menor que o tempo de processamento. 
