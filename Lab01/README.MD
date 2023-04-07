@@ -21,6 +21,12 @@ Isso irá ordenar o vetor `[10, 8, 7, 6, 5, 4, 3, 2, 1, 9]` usando `quatro` proc
 
 ---
 
+## Vídeo executando e mostrando uma análise
+
+https://drive.google.com/file/d/1UDkOSVSioi9MTyvGxI7Ym-Jfa4BnvTp1/view?usp=sharing
+
+---
+
 ## Bibliotecas Utilizadas
 
 As seguintes bibliotecas são utilizadas no script:
