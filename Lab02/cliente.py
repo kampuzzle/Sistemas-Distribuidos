@@ -1,19 +1,66 @@
-from flower.client import NumpyClient
+import flwr
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPool2D,Flatten,Dense
+from tensorflow.keras.optimizers import SGD 
+import tensorflow_datasets as tfds
 
-class MyClient(NumpyClient):
-    def __init__(self, server_address):
-        super().__init__(server_address)
+import numpy as np
+def define_model(input_shape,num_classes):
+  model = Sequential()
+  model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=input_shape))
+  model.add(MaxPool2D((2, 2)))
+  model.add(Flatten())
+  model.add(Dense(100, activation='relu', kernel_initializer='he_uniform'))
+  model.add(Dense(num_classes, activation='softmax'))
+  # compile model
+  opt = SGD(learning_rate=0.01, momentum=0.9)
+  model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+  return model
 
-    def get_parameters(self):
-        # Implementar o código para obter os parâmetros do modelo
-        # Por exemplo:
-        return {"weights": [1.0, 2.0, 3.0], "bias": 0.5}
+
+class MyClient(flwr.client.NumPyClient):
+    def __init__(self, model, x_train, y_train, x_test, y_test) -> None:
+        self.model = model
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_test = x_test
+        self.y_test = y_test
+
+    def get_parameters(self, config):
+        return self.model.get_weights()
 
     def fit(self, parameters, config):
-        # Implementar o código para treinar o modelo com os dados recebidos do servidor
-        # Por exemplo:
-        weights = parameters["weights"]
-        bias = parameters["bias"]
-        x_train = config["x_train"]
-        y_train = config["y_train"]
-        # Código para treinar o modelo com os dados
+        self.model.set_weights(parameters)
+        self.model.fit(self.x_train, self.y_train, epochs=1, verbose=2)
+        return self.model.get_weights(), len(self.x_train), {}
+
+    def evaluate(self, parameters, config):
+        self.model.set_weights(parameters)
+        loss, acc = self.model.evaluate(self.x_test, self.y_test, verbose=2)
+        return loss, len(self.x_test), {"accuracy": acc}
+
+
+if __name__ == "__main__":
+    
+    mnist = tf.keras.datasets.mnist
+    (df_train,df_test)=tfds.load('mnist',split=['train','test'],shuffle_files=True,  as_supervised=True)
+
+
+
+    # Reshape and normalize
+    x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
+    x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
+
+    # One-hot encode the labels
+    y_train = tf.keras.utils.to_categorical(y_train, 10)
+    y_test = tf.keras.utils.to_categorical(y_test, 10)
+
+    # Define model
+    model = define_model((28, 28, 1), 10)
+
+    client = MyClient(model, x_train, y_train, x_test, y_test)
+
+    flwr.client.start_numpy_client(server_address="[::]:8080", client=client)
+
+    
