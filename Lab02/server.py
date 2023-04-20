@@ -26,25 +26,11 @@ if __name__ == "__main__":
         evaluate_metrics_aggregation_fn=weighted_average,
     )
 
-
-   
-
-
     server_address = "[::]:8000"
     
     num_round = 40
-    # Start Flower server for three rounds of federated learning
+    # Start Flower server for num_round rounds of federated learning
     history = start_server(server_address=server_address,config=fl.server.ServerConfig(num_rounds=num_round), strategy=strategy)
     # Save history
     with open(f"history_{num_round}.pkl", "wb") as f:
         pickle.dump(history, f)
-
-
-
-
-       
-
-
-            
-    
-
