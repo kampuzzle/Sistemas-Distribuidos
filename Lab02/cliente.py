@@ -3,7 +3,11 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPool2D,Flatten,Dense
 from tensorflow.keras.optimizers import SGD 
-import tensorflow_datasets as tfds
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+
+#import sklearn datasets
+from sklearn.datasets import load_digits
 
 import numpy as np
 def define_model(input_shape,num_classes):
@@ -43,24 +47,36 @@ class MyClient(flwr.client.NumPyClient):
 
 if __name__ == "__main__":
     
-    mnist = tf.keras.datasets.mnist
-    (df_train,df_test)=tfds.load('mnist',split=['train','test'],shuffle_files=True,  as_supervised=True)
+    
+    mnist = fetch_openml('mnist_784', version=1, cache=True)
+    X = mnist.data
+    y = mnist.target
+
+    while  True:
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+        x_train = np.array(x_train)
+        x_test = np.array(x_test)
+        y_train = np.array(y_train)
+        y_test = np.array(y_test)
+
+
+        # Reshape and normalize
+        x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
+        x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
+
+        # One-hot encode the labels
+        y_train = tf.keras.utils.to_categorical(y_train, 10)
+        y_test = tf.keras.utils.to_categorical(y_test, 10)
+
+        # Define model
+        model = define_model((28, 28, 1), 10)
+
+        client = MyClient(model, x_train, y_train, x_test, y_test)
+
+        flwr.client.start_numpy_client(server_address="[::]:8000", client=client)
 
 
 
-    # Reshape and normalize
-    x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
-    x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
-
-    # One-hot encode the labels
-    y_train = tf.keras.utils.to_categorical(y_train, 10)
-    y_test = tf.keras.utils.to_categorical(y_test, 10)
-
-    # Define model
-    model = define_model((28, 28, 1), 10)
-
-    client = MyClient(model, x_train, y_train, x_test, y_test)
-
-    flwr.client.start_numpy_client(server_address="[::]:8080", client=client)
 
     
