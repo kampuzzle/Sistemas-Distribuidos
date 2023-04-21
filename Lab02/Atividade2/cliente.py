@@ -52,29 +52,28 @@ if __name__ == "__main__":
     X = mnist.data
     y = mnist.target
 
-    while  True:
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
-        x_train = np.array(x_train)
-        x_test = np.array(x_test)
-        y_train = np.array(y_train)
-        y_test = np.array(y_test)
+    x_train = np.array(x_train)
+    x_test = np.array(x_test)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
 
 
-        # Reshape and normalize
-        x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
-        x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
+    # Reshape and normalize
+    x_train = x_train.reshape(-1, 28, 28, 1) / 255.0
+    x_test = x_test.reshape(-1, 28, 28, 1) / 255.0
 
-        # One-hot encode the labels
-        y_train = tf.keras.utils.to_categorical(y_train, 10)
-        y_test = tf.keras.utils.to_categorical(y_test, 10)
+    # One-hot encode the labels
+    y_train = tf.keras.utils.to_categorical(y_train, 10)
+    y_test = tf.keras.utils.to_categorical(y_test, 10)
 
-        # Define model
-        model = define_model((28, 28, 1), 10)
+    # Define model
+    model = define_model((28, 28, 1), 10)
 
-        client = MyClient(model, x_train, y_train, x_test, y_test)
+    client = MyClient(model, x_train, y_train, x_test, y_test)
 
-        flwr.client.start_numpy_client(server_address="[::]:8000", client=client)
+    flwr.client.start_numpy_client(server_address="[::]:8000", client=client)
 
 
 
