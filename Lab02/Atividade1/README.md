@@ -1,8 +1,6 @@
-# Laboratório de Aprendizado Federado - Atividade 2
+# Laboratório de Aprendizado Federado - Atividade 1
 
-## Atividade 1
-
-### Compilação e Execução
+## Compilação e Execução
 
 Dentro da pasta Lab2/Atividade1 é possível rodar o programa executando as células do arquivo atividade-1.ipynb.
 
@@ -10,11 +8,13 @@ As células estão separadas em grupos, sendo a primeira parte o treinamento loc
 
 ---
 
-### Vídeo executando e mostrando uma análise
+## Vídeo executando e mostrando uma análise
+
+https://drive.google.com/file/d/1MSM-MOzKqB2odSjYPCfkN5mF4ZGKLz5H/view?usp=share_link
 
 ---
 
-### Frameworks Utilizadas
+## Frameworks Utilizadas
 
 Como instruído no roteiro, utilizamos o framework Flower para o treinamento federado. Também utilizamos o framework Ray e TensorFlow, para auxiliar o desenvolvimento do machine learning.
 
@@ -22,7 +22,7 @@ Os pacotes numpy e matplotlib também foram utilizados para as funções e cria�
 
 ---
 
-### Metodologia de implementação
+## Metodologia de implementação
 
 O treinamento local foi feito da mesma forma que o roteiro, incluímos para a comparação com o aprendizado federado com diferentes rounds.
 
@@ -34,7 +34,7 @@ Por fim, temos os gráficos de cada quantidade de rounds, e a comparação com t
 
 ---
 
-### Célula Principal
+## Célula Principal
 
 A principal célula da atividade tem o título "Treinamento federado utilizando 10, 15 e 20 rounds".
 Essa função é responsável por treinar um modelo de aprendizado federado com quatro iterações, utilizando 10 dispositivos clientes, onde cada iteração é executada em um número diferente de rodadas (5, 10, 15 e 20). O objetivo é plotar a acurácia e a perda do modelo em cada rodada para avaliar seu desempenho ao longo do tempo.
@@ -42,7 +42,7 @@ Ao final de cada iteração, a função armazena o histórico de treinamento (ac
 
 ---
 
-### Resultados 
+## Resultados 
 
 **Acurácia com 5 rounds**
 
@@ -74,7 +74,7 @@ Ao final de cada iteração, a função armazena o histórico de treinamento (ac
 
 ---
 
-### Conclusão
+## Conclusão
 
 O treinamento local, ao contrário do treinamento federado, é executado em um único dispositivo e utiliza somente os dados disponíveis nesse dispositivo. Por isso, a efetividade na acurácia é maior e com uma quantidade menor de rounds em comparação ao treinamento federado, que utiliza uma rede de dispositivos para treinar o modelo em diferentes dados distribuídos.
 

@@ -62,8 +62,8 @@ No código principal, o cliente carrega o conjunto de dados MNIST usando fetch_o
 
 ---
 
-# Gráficos
+## Gráficos
 
 ---
 
-# Conclusão
+## Conclusão

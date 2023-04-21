@@ -1,5 +1,10 @@
 # Repositório geral para a Sistemas Distribuidos
 
+### Integrantes:
+* Amanda Brito Apolinário
+* Lorenzo Miniguite Scaramussa
+* Paula Um Porto de Azeredo Bremenkamp
+
 Criamos um repositório único para centralizar todas as atividades da matéria. A pasta root irá conter uma pasta individual para cada laboratório, onde estarão todas os arquivos necessários para a entrega.
 
 Assim, após clonar o repositório, navegue para a pasta especifica do laboratório desejado.
