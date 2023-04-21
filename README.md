@@ -18,4 +18,26 @@ Assim, após clonar o repositório, navegue para a pasta especifica do laborató
 
 * arquivo `test.py`, script usado para testar os requisitos do algoritmo.
 
+---
+
 ## Lab02
+
+### Atividade 1
+
+* pasta `graficos` contendo os gráficos de acurácia usadas no relatório;
+
+* arquivo `atividade-1.ipynb` usado para fazer os treinamentos local e federado;
+
+* arquivo `README.md` contendo as instruções de execução da primeira atividade e o relatório técnico.
+
+### Atividade 2
+
+* arquivo `cliente.py` contendo a implementação do cliente;
+
+* arquivo `server.py` contendo a implementação do servidor;
+
+* arquivo `graficos.ipynb` usado para gerar os gráficos e histories;
+
+* arquivo `run.sh`, um script de execução que implementamos;
+
+* arquivo `README.md`, contendo as instruções de execução e o relatório técnico da segunda atividade.

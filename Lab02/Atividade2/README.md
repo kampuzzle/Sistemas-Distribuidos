@@ -2,8 +2,17 @@
 
 ## Compilação e Execução
 
-# COMPLETAR ATENÇÃO
-Dentro da pasta Lab02/Atividade2, 
+Dentro da pasta Lab02/Atividade2, execute o seguinte comando:
+
+```
+./run.sh
+```
+
+Caso encontre algum erro de permissão, rode o comando abaixo para dar permissão total ao script e tente novamente
+
+```
+chmod 777 run.sh
+```
 
 ---
 
