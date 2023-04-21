@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # Define strategy
    # Create FedAvg strategy
     strategy = fl.server.strategy.FedAvg(
-         min_fit_clients=5,  
+         
         min_evaluate_clients=5, 
         evaluate_metrics_aggregation_fn=weighted_average,
     )
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # getting number of rounds from command line
     num_round = int(sys.argv[1])
 
-    
+
     # Start Flower server for num_round rounds of federated learning
     history = start_server(server_address=server_address,config=fl.server.ServerConfig(num_rounds=num_round), strategy=strategy)
     # Save history

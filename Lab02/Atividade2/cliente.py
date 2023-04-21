@@ -50,7 +50,7 @@ if __name__ == "__main__":
     client_number = int(sys.argv[1])
     
     #Load data
-    data = np.load("clients_data/mnist_"+str(client_number - 1)+".npz")
+    data = np.load("clients_data/mnist_"+str(client_number)+".npz")
     x_train = data["x_train"]
     y_train = data["y_train"]
     x_test = data["x_test"]
