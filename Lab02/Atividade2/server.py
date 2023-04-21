@@ -1,7 +1,7 @@
 import flwr as fl
 from flwr.server.strategy import FedAvg
 from flwr.server import start_server
-
+import sys
 
 
 def weighted_average(metrics):
@@ -28,7 +28,10 @@ if __name__ == "__main__":
 
     server_address = "[::]:8000"
     
-    num_round = 2
+    # getting number of rounds from command line
+    num_round = int(sys.argv[1])
+
+    
     # Start Flower server for num_round rounds of federated learning
     history = start_server(server_address=server_address,config=fl.server.ServerConfig(num_rounds=num_round), strategy=strategy)
     # Save history
