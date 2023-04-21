@@ -18,8 +18,4 @@ Assim, após clonar o repositório, navegue para a pasta especifica do laborató
 
 * arquivo `test.py`, script usado para testar os requisitos do algoritmo.
 
-
-
-perguntas: 
-
-dado um numero impar, é para o primeiro vetor ter mais um elemento ou o ultimo? é para o ultimo vetor ter um elemento so? 
+## Lab02
