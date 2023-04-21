@@ -1,4 +1,4 @@
-# Laboratório de Aprendizado Federado
+# Laboratório de Aprendizado Federado - Atividade 2
 
 ## Atividade 1
 
