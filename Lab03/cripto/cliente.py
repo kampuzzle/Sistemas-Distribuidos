@@ -44,7 +44,7 @@ def mine(stub):
     current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     challenge = stub.getChallenge(mineracao_pb2.transactionId(transactionId=current_transaction)).result
     threads = []
-    for i in range(4):  # 4 threzzads para processamento paralelo
+    for i in range(4):  # 4 threads para processamento paralelo
         t = threading.Thread(target=mine_challenge, args=(i, challenge, stub))
         threads.append(t)
         t.start()
