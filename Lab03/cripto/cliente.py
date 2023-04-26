@@ -2,6 +2,11 @@ import grpc
 import mineracao_pb2
 import mineracao_pb2_grpc
 import threading
+import random
+import hashlib
+import string
+
+current_transaction = 0
 
 
 def connect():
@@ -14,6 +19,7 @@ def connect():
 def get_current_transaction(stub):
     response = stub.getTransactionId(mineracao_pb2.void())
     print("Current transaction ID: ", response.result)
+    return response.result
 
 
 def get_challenge(stub):
@@ -29,12 +35,15 @@ def get_transaction_status(stub):
 
 
 def get_winner(stub):
+    
     transaction_id = input("Enter transaction ID: ")
     response = stub.getWinner(mineracao_pb2.transactionId(transactionId=int(transaction_id)))
     print("Winner: ", response.result)
 
 
 def get_solution(stub):
+    global current_transaction
+
     transaction_id = input("Enter transaction ID: ")
     response = stub.getSolution(mineracao_pb2.transactionId(transactionId=int(transaction_id)))
     print("Solution: ", response.result)
@@ -52,21 +61,32 @@ def mine(stub):
         t.join()
 
 
+def generate_random_solution(challenge_size):
+    letras = string.ascii_letters + string.digits
+    return "".join(random.choice(letras) for i in range(challenge_size))
+
+
 def mine_challenge(thread_id, challenge, stub):
+    global current_transaction
+
+    current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     print("Thread ", thread_id, " started")
-    for i in range(1000000):  # laço de processamento simulando solução de desafio
-        solution = i ^ challenge
-        if solution % 100000 == 0:
-            print("Thread ", thread_id, " at ", i)
-        if solution % 777 == 0:  # solução encontrada
-            print("Thread ", thread_id, " found solution ", solution)
+    
+    while True:
+
+        solution = generate_random_solution(len(challenge))
+
+        hash_solution = hashlib.sha1(solution.encode()).hexdigest()
+
+        if hash_solution == challenge:
             break
-    else:
-        print("Thread ", thread_id, " did not find solution")
-        return
-    # submeter solução ao servidor
+
+
+    #  submeter solução ao servidor
     response = stub.submitChallenge(
-        mineracao_pb2.challengeArgs(transactionId=int(current_transaction), clientId=thread_id, seed=solution))
+        mineracao_pb2.challengeArgs(transactionId=int(current_transaction),
+                                    clientId=thread_id,
+                                    seed=solution))
     print("Thread ", thread_id, " server response: ", response.result)
 
 
@@ -79,6 +99,7 @@ def menu(stub):
         print("4. Get winner")
         print("5. Get solution")
         print("6. Mine")
+        print("0. Exit")
         choice = input("Enter your choice: ")
         if choice == "1":
             get_current_transaction(stub)
@@ -90,7 +111,15 @@ def menu(stub):
             get_winner(stub)
         elif choice == "5":
             get_solution(stub)
+        elif choice == "6":
+            mine(stub)
+        elif choice == "0":
+            break
+        else:
+            print("Invalid option!")
 
 if __name__ == '__main__':
     stub = connect()
+
+    current_transaction = get_current_transaction(stub)
     menu(stub)
