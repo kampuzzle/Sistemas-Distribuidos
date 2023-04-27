@@ -9,10 +9,8 @@ import string
 
 
 def generate_challenge():
-    tamanho = random.randint(1, 6)
-    # gera um numero aleatorio com quantidade de digitos igual a tamanho
-    desafio = random.randint(0, 10 ** tamanho - 1)
-    return desafio
+    return random.randint(1, 6)
+   
 
 #  Definindo a função que gera um desafio criptográfico
 def generate_crypto_challenge(transactionId):

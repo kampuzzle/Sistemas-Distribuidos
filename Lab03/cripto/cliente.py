@@ -62,29 +62,21 @@ def mine(stub):
 
 
 def generate_random_solution(challenge):
-    # generate a random string and apply it the hash function, until the hash matches the challenge
-    solution = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
-    hash_solution = hashlib.sha1(solution.encode()).hexdigest()
-    
-    return hash_solution
+    hash = hashlib.sha1(str(challenge).encode()).hexdigest()
     
 
 
 def mine_challenge(thread_id, challenge, stub):
-
+    # challenge is a int represent the amount of bits to be 0
     current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     print("Thread ", thread_id, " started")
     
     while True:
+        solution = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+        hash_object = hashlib.sha1(str(challenge+solution).encode()).hexdigest()
 
-        hash_solution = generate_random_solution(challenge)
-
-
-        if hash_solution == challenge:
+        if hash_object[:challenge] == '0'*challenge:
             break
-
-
-    #  submeter solução ao servidor
     response = stub.submitChallenge(
         mineracao_pb2.challengeArgs(transactionId=int(current_transaction),
                                     clientId=thread_id,
