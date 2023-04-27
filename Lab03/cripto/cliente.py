@@ -61,22 +61,24 @@ def mine(stub):
         t.join()
 
 
-def generate_random_solution(challenge_size):
-    letras = string.ascii_letters + string.digits
-    return "".join(random.choice(letras) for i in range(challenge_size))
+def generate_random_solution(challenge):
+    # generate a random string and apply it the hash function, until the hash matches the challenge
+    solution = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+    hash_solution = hashlib.sha1(solution.encode()).hexdigest()
+    
+    return hash_solution
+    
 
 
 def mine_challenge(thread_id, challenge, stub):
-    global current_transaction
 
     current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     print("Thread ", thread_id, " started")
     
     while True:
 
-        solution = generate_random_solution(len(challenge))
+        hash_solution = generate_random_solution(challenge)
 
-        hash_solution = hashlib.sha1(solution.encode()).hexdigest()
 
         if hash_solution == challenge:
             break
