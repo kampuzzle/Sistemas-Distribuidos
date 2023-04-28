@@ -8,6 +8,7 @@ import random # para gerar números aleatórios
 import string
 
 
+
 def generate_challenge():
     return random.randint(1, 6)
    
@@ -15,7 +16,6 @@ def generate_challenge():
 #  Definindo a função que gera um desafio criptográfico
 def generate_crypto_challenge(transactionId):
     challenge = generate_challenge()
-    print("Challenge: ", challenge)
     solution = None
     winner = -1
 
@@ -27,6 +27,7 @@ class CryptoMiningServiceServicer(mineracao_pb2_grpc.apiServicer):
     def __init__(self):
         self.transactions = {}
         self.transactions[0] = generate_crypto_challenge(0)
+        print("Initial challenge: ", self.transactions[0]['challenge'])
 
 
     def getChallenge(self, request, context):
@@ -53,21 +54,35 @@ class CryptoMiningServiceServicer(mineracao_pb2_grpc.apiServicer):
             return mineracao_pb2.intResult(result=self.transactions[request.transactionId]['winner'])
 
     def submitChallenge(self, request, context):
+        
+
         challenge = self.transactions[request.transactionId]['challenge']
         if request.transactionId not in self.transactions:
             return mineracao_pb2.intResult(result=-1)
         elif self.transactions[request.transactionId]['solution'] is not None:
-            return mineracao_pb2.intResult(result=0)
+            return mineracao_pb2.intResult(result=2)
         else:
-            print("Solution: ", request.solution	)
-            hash = hashlib.sha1(str(request.solution)).encode().digest()
+            print("Solution submitted: ", request.solution	)
+            hash = hashlib.sha1(str(request.solution).encode()).digest()
 
             if (hash.startswith(b'\x00' * challenge)):
-                self.transactions[request.transactionId]['solution'] = request.solution
-                self.transactions[request.transactionId]['winner'] = request.winner
-                return mineracao_pb2.intResult(result=2)
+                # if winner -1 -> no winner
+                if self.transactions[request.transactionId]['winner'] == -1:
+                        
+                    self.transactions[request.transactionId]['solution'] = request.solution
+                    self.transactions[request.transactionId]['winner'] = request.clientId
+                    print("Winner for challenge {}: {}".format(challenge, request.clientId))
+                    print("Solution: ", self.transactions[request.transactionId]['solution'])
+
+                    # generate new challenge
+                    self.transactions[request.transactionId + 1] = generate_crypto_challenge(request.transactionId + 1)
+                    print("New challenge: ", self.transactions[request.transactionId + 1]['challenge'])
+
+                    return mineracao_pb2.intResult(result=1)
+                else :
+                    return mineracao_pb2.intResult(result=2)
             else:
-                return mineracao_pb2.intResult(result=1)
+                return mineracao_pb2.intResult(result=0)
 
     def getWinner(self, request, context):
         if request.transactionId not in self.transactions:
@@ -84,11 +99,13 @@ class CryptoMiningServiceServicer(mineracao_pb2_grpc.apiServicer):
 
 
 def serve():
+    print("Starting server...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
     mineracao_pb2_grpc.add_apiServicer_to_server(CryptoMiningServiceServicer(),
                                                  server)
     server.add_insecure_port('[::]:8080')
     server.start()
+    print("Listening on port 8080.")
     
     server.wait_for_termination()
 
