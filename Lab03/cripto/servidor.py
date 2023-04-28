@@ -16,7 +16,7 @@ def generate_challenge():
 def generate_crypto_challenge(transactionId):
     challenge = generate_challenge()
     print("Challenge: ", challenge)
-    solution = 0
+    solution = None
     winner = -1
 
     return {'challenge': challenge, 'solution': solution, 'winner': winner}
@@ -46,39 +46,41 @@ class CryptoMiningServiceServicer(mineracao_pb2_grpc.apiServicer):
 
     def getTransactionStatus(self, request, context):
         if request.transactionId not in self.transactions:
-            return mineracao_pb2.Transaction(winner=-1)
+            return mineracao_pb2.intResult(result=-1)
         elif self.transactions[request.transactionId]['solution'] is None:
-            return mineracao_pb2.Transaction(winner=1)
+            return mineracao_pb2.intResult(result=1)
         else:
-            return mineracao_pb2.Transaction(winner=self.transactions[request.transactionId]['winner'])
+            return mineracao_pb2.intResult(result=self.transactions[request.transactionId]['winner'])
 
     def submitChallenge(self, request, context):
+        challenge = self.transactions[request.transactionId]['challenge']
         if request.transactionId not in self.transactions:
-            return mineracao_pb2.Transaction(winner=-1)
+            return mineracao_pb2.intResult(result=-1)
         elif self.transactions[request.transactionId]['solution'] is not None:
-            return mineracao_pb2.Transaction(winner=0)
+            return mineracao_pb2.intResult(result=0)
         else:
-            hash_object = hashlib.sha1(str(request.challenge).encode())
-            hex_dig = hash_object.hexdigest()
-            if hex_dig == self.transactions[request.transactionId]['challenge']:
+            print("Solution: ", request.solution	)
+            hash = hashlib.sha1(str(request.solution)).encode().digest()
+
+            if (hash.startswith(b'\x00' * challenge)):
                 self.transactions[request.transactionId]['solution'] = request.solution
                 self.transactions[request.transactionId]['winner'] = request.winner
-                return mineracao_pb2.Transaction(winner=2)
+                return mineracao_pb2.intResult(result=2)
             else:
-                return mineracao_pb2.Transaction(winner=1)
+                return mineracao_pb2.intResult(result=1)
 
     def getWinner(self, request, context):
         if request.transactionId not in self.transactions:
-            return mineracao_pb2.Transaction(winner=-1)
+            return mineracao_pb2.intResult(result=-1)
         else:
-            return mineracao_pb2.Transaction(winner=self.transactions[request.transactionId]['winner'])
+            return mineracao_pb2.intResult(result=self.transactions[request.transactionId]['winner'])
 
     def getSolution(self, request, context):
         if request.transactionId not in self.transactions:
-            return mineracao_pb2.SolutionResult(status=-1)
+            return mineracao_pb2.structResult(status=-1)
         else:
             status = 0 if self.transactions[request.transactionId]['solution'] else 1
-            return mineracao_pb2.SolutionResult(status=status, solution=self.transactions[request.transactionId]['solution'], challenge=self.transactions[request.transactionId]['challenge'])
+            return mineracao_pb2.structResult(status=status, solution=self.transactions[request.transactionId]['solution'], challenge=self.transactions[request.transactionId]['challenge'])
 
 
 def serve():

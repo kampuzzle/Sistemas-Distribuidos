@@ -5,7 +5,7 @@ import threading
 import random
 import hashlib
 import string
-
+import os 
 current_transaction = 0
 
 
@@ -65,22 +65,30 @@ def generate_random_solution(challenge):
     hash = hashlib.sha1(str(challenge).encode()).hexdigest()
     
 
-
 def mine_challenge(thread_id, challenge, stub):
     # challenge is a int represent the amount of bits to be 0
     current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     print("Thread ", thread_id, " started")
-    
-    while True:
-        solution = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
-        hash_object = hashlib.sha1(str(challenge+solution).encode()).hexdigest()
+    whole_range = 100000000 
+    partition_range = int(whole_range / 4)
+    thread_range = range(thread_id * partition_range, (thread_id + 1) * partition_range)
 
-        if hash_object[:challenge] == '0'*challenge:
+    for i in thread_range:
+        hash = hashlib.sha1((str(i)).encode()).digest()
+        if hash.startswith(b'\x00' * challenge):
+            solution = i
             break
+            
+        
+     
+
+
+
+
     response = stub.submitChallenge(
         mineracao_pb2.challengeArgs(transactionId=int(current_transaction),
                                     clientId=thread_id,
-                                    seed=solution))
+                                    solution=str(solution).encode()))
     print("Thread ", thread_id, " server response: ", response.result)
 
 
