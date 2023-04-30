@@ -6,8 +6,8 @@ import hashlib
 import uuid # para gerar identificadores únicos
 import random # para gerar números aleatórios
 import string
-
-
+import threading
+import time
 
 def generate_challenge():
     return random.randint(1, 6)
@@ -28,8 +28,22 @@ class CryptoMiningServiceServicer(mineracao_pb2_grpc.apiServicer):
         self.transactions = {}
         self.transactions[0] = generate_crypto_challenge(0)
         print("Initial challenge: ", self.transactions[0]['challenge'])
+        
+        thread = threading.Thread(target=self.print_table, args=())
+        thread.daemon = True
+        thread.start()
 
 
+
+    def print_table(self):
+        #print table every 5 seconds
+        while True:
+            print("Transaction ID | Challenge | Solution | Winner")
+            for transaction_id in self.transactions:
+                print("{} | {} | {} | {}".format(transaction_id, self.transactions[transaction_id]['challenge'], self.transactions[transaction_id]['solution'], self.transactions[transaction_id]['winner']))
+            print("------------------------------------------------")
+            time.sleep(5)
+ 
     def getChallenge(self, request, context):
         if request.transactionId not in self.transactions:
             return mineracao_pb2.intResult(result=-1)
@@ -106,8 +120,12 @@ def serve():
     server.add_insecure_port('[::]:8080')
     server.start()
     print("Listening on port 8080.")
+
+
     
     server.wait_for_termination()
+
+
 
 if __name__ == '__main__':
     serve()

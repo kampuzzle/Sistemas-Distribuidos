@@ -83,7 +83,7 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
     # challenge is a int represent the amount of bits to be 0
     current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     print("---Thread ", thread_id, " started"	)
-    whole_range = 100000000 
+    whole_range = 922337203685477
     partition_range = int(whole_range / 4)
     thread_range = range(thread_id * partition_range, (thread_id + 1) * partition_range)
 
@@ -107,7 +107,7 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
                 print("---Thread ", thread_id, " finished, solution found! ")
                 print("---Winner solution: ", solution	)
 
-                already_solved = True
+                c = True
             else:
                 print("---Thread ", thread_id, " finished, solution was wrong")
             return
