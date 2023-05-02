@@ -6,6 +6,7 @@ import random
 import hashlib
 import string
 import os 
+import time
 current_transaction = 0
 already_solved = False
 
@@ -79,7 +80,7 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
     global already_solved
     already_solved = False
 
-    
+    startTime = time.time()
     # challenge is a int represent the amount of bits to be 0
     current_transaction = stub.getTransactionId(mineracao_pb2.void()).result
     print("---Thread ", thread_id, " started"	)
@@ -104,9 +105,10 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
             if response.result == 2:
                 print("---Thread ", thread_id, " finished, challenge was already solved")
             elif response.result == 1:
+                endTime = time.time()
                 print("---Thread ", thread_id, " finished, solution found! ")
                 print("---Winner solution: ", solution	)
-
+                print("---Time consumed: ", endTime - startTime)
                 c = True
             else:
                 print("---Thread ", thread_id, " finished, solution was wrong")
