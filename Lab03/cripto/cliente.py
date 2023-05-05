@@ -6,6 +6,7 @@ import random
 import hashlib
 import string
 import os 
+import time 
 current_transaction = 0
 already_solved = False
 
@@ -87,7 +88,8 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
     partition_range = int(whole_range / 4)
     thread_range = range(thread_id * partition_range, (thread_id + 1) * partition_range)
 
-    
+    start_time = time.time()
+
 
     for i in thread_range:
         if already_solved:
@@ -98,6 +100,7 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
 
         if binary[1:challenge+1] == '0' * challenge:
             solution = str(i)
+            end_time = time.time()
 
             if already_solved:
                 return
@@ -113,6 +116,9 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
             elif response.result == 1:
                 print("---Thread ", thread_id, " finished, solution found! ")
                 print("---Winner solution: ", solution	)
+                print("---Time lapsed: ", "{:.6f}".format(end_time - start_time), " seconds")
+                
+
 
                 c = True
             else:
