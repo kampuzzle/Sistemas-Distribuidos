@@ -10,7 +10,7 @@ import threading
 import time
 
 def generate_challenge():
-    return random.randint(1, 6)
+    return random.randint(1, 32)
    
 
 #  Definindo a função que gera um desafio criptográfico
@@ -78,8 +78,9 @@ class CryptoMiningServiceServicer(mineracao_pb2_grpc.apiServicer):
         else:
             print("Solution submitted: ", request.solution	)
             hash = hashlib.sha1(str(request.solution).encode()).digest()
+            binary = bin(int.from_bytes(hash, byteorder='big'))[2:]
 
-            if (hash.startswith(b'\x00' * challenge)):
+            if binary[1:challenge+1] == '0' * challenge:
                 # if winner -1 -> no winner
                 if self.transactions[request.transactionId]['winner'] == -1:
                         

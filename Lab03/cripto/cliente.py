@@ -93,13 +93,20 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
         if already_solved:
             return
         hash = hashlib.sha1((str(i)).encode()).digest()
-        if hash.startswith(b'\x00' * challenge):
+
+        binary = bin(int.from_bytes(hash, byteorder='big'))[2:]
+
+        if binary[1:challenge+1] == '0' * challenge:
             solution = str(i)
+
+            if already_solved:
+                return
+
             response = stub.submitChallenge(
             mineracao_pb2.challengeArgs(transactionId=int(current_transaction),
                                     clientId=client_unique_id,
                                     solution=solution)
-            )
+            ) 
             #  print response
             if response.result == 2:
                 print("---Thread ", thread_id, " finished, challenge was already solved")
