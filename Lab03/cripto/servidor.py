@@ -10,7 +10,7 @@ import threading
 import time
 
 def generate_challenge():
-    return random.randint(1, 32)
+    return random.randint(1, 22)
    
 
 #  Definindo a função que gera um desafio criptográfico

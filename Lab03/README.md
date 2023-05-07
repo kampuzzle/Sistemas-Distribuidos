@@ -14,6 +14,8 @@ python3 cliente.py
 
 ## Vídeo executando e mostrando uma análise
 
+https://youtu.be/TSqqY8yZTt8
+
 ---
 
 ## Bibliotecas Utilizadas

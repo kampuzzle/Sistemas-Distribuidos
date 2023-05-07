@@ -6,11 +6,7 @@ import random
 import hashlib
 import string
 import os 
-<<<<<<< HEAD
-import time 
-=======
 import time
->>>>>>> b297c3ff139cb7013a47f0a20bfaacabb2f219ea
 current_transaction = 0
 already_solved = False
 
@@ -121,14 +117,9 @@ def mine_challenge(thread_id, challenge, client_unique_id, stub):
                 endTime = time.time()
                 print("---Thread ", thread_id, " finished, solution found! ")
                 print("---Winner solution: ", solution	)
-<<<<<<< HEAD
                 print("---Time lapsed: ", "{:.6f}".format(end_time - start_time), " seconds")
                 
 
-
-=======
-                print("---Time consumed: ", endTime - startTime)
->>>>>>> b297c3ff139cb7013a47f0a20bfaacabb2f219ea
                 c = True
             else:
                 print("---Thread ", thread_id, " finished, solution was wrong")
