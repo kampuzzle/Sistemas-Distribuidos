@@ -1,0 +1,64 @@
+// Definir o serviço de aprendizado federado
+service FederatedLearning {
+  // Registrar um cliente no servidor
+  rpc RegisterClient (RegisterClientRequest) returns (RegisterClientResponse) {}
+
+  // Iniciar o treinamento de um cliente
+  rpc StartTraining (StartTrainingRequest) returns (StartTrainingResponse) {}
+
+  // Avaliar o modelo de um cliente
+  rpc EvaluateModel (EvaluateModelRequest) returns (EvaluateModelResponse) {}
+}
+
+// Definir as mensagens de requisição e resposta
+
+// Mensagem para registrar um cliente no servidor
+message RegisterClientRequest {
+  // O ID único do cliente
+  string client_id = 1;
+
+  // O endereço IP do cliente
+  string client_ip = 2;
+
+  // A porta do cliente
+  int32 client_port = 3;
+}
+
+// Mensagem para retornar o código de confirmação e o número do round atual
+message RegisterClientResponse {
+  // O código de confirmação
+  int32 confirmation_code = 1;
+
+  // O número do round atual
+  int32 current_round = 2;
+}
+
+// Mensagem para iniciar o treinamento de um cliente
+message StartTrainingRequest {
+  // O número do round atual
+  int32 current_round = 1;
+
+  // Os pesos do modelo global
+  repeated float global_weights = 2;
+}
+
+// Mensagem para retornar os pesos do modelo local e o número de amostras
+message StartTrainingResponse {
+  // Os pesos do modelo local
+  repeated float local_weights = 1;
+
+  // O número de amostras da base de dados local
+  int32 local_samples = 2;
+}
+
+// Mensagem para avaliar o modelo de um cliente
+message EvaluateModelRequest {
+  // Os pesos do modelo global
+  repeated float global_weights = 1;
+}
+
+// Mensagem para retornar o resultado das métricas de avaliação
+message EvaluateModelResponse {
+  // A acurácia do modelo no conjunto de teste local
+  float accuracy = 1;
+}
