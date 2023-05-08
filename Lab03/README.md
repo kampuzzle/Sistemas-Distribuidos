@@ -85,7 +85,132 @@ A função `menu(stub)` exibe um menu de opções para o usuário, solicitando q
 
 ## Resultados 
 
+* Transaction ID = 0: 
+> ---Winner solution:  47
+
+> ---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 1:
+> ---Winner solution:  830
+
+>---Time lapsed:  0.002993  seconds
+
+* Transaction ID = 2:
+> ---Winner solution:  47
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 3:
+> ---Winner solution:  461168602650089
+
+>---Time lapsed:  5.675344  seconds
+
+* Transaction ID = 4:
+> ---Winner solution:  230584301240507
+
+>---Time lapsed:  2.482456  seconds
+
+* Transaction ID = 5:
+> ---Winner solution:  230584301240507
+
+>---Time lapsed:  1.652576  seconds
+
+* Transaction ID = 6:
+> ---Winner solution:  25762
+
+>---Time lapsed:  0.074372  seconds
+
+* Transaction ID = 7:
+> ---Winner solution:  54
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 8:
+> ---Winner solution:  47
+
+>---Time lapsed:  0.000000  seconds 
+
+* Transaction ID = 9:
+> ---Winner solution:  1099
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 10:
+> ---Winner solution:  47
+
+>---Time lapsed:  0.000998  seconds
+
+
+* Transaction ID = 11:
+> ---Winner solution:  25762
+
+>---Time lapsed:  0.120577  seconds
+
+* Transaction ID = 12: 
+> ---Winner solution:  230584301240507
+
+>---Time lapsed:  1.716852  seconds
+
+* Transaction ID = 13:
+> ---Winner solution:  1099
+
+>---Time lapsed:  0.003626  seconds
+
+* Transaction ID = 14:
+> ---Winner solution:  32030
+
+>---Time lapsed:  0.066765  seconds
+
+* Transaction ID = 15:
+> ---Winner solution:  7
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 16:
+> ---Winner solution:  47
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 17: 
+> ---Winner solution:  47
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 18:
+> ---Winner solution:  4913
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 19:
+> ---Winner solution:  533968
+
+>---Time lapsed:  2.821925  seconds
+
+* Transaction ID = 20: 
+> ---Winner solution:  461168602650089
+
+>---Time lapsed:  6.880543  seconds
+
+* Transaction ID = 21:
+> ---Winner solution:  21
+
+>---Time lapsed:  0.000000  seconds
+
+* Transaction ID = 22:
+> ---Winner solution:  54
+
+>---Time lapsed:  0.000000  seconds
 
 ---
 
 ## Conclusão
+
+Analisando os resultados acima, podemos ver que, para diferentes transações realizadas, cada uma com um ID único, tiveram um vencedor, que foi o cliente que conseguiu resolver o desafio criptográfico primeiro e submeteu a solução correta.
+
+Além disso, foi registrado o tempo total gasto para resolver cada desafio. É interessante notar que o tempo varia de acordo com a complexidade do desafio e o poder de processamento do cliente. Desafios mais simples foram resolvidos em um tempo muito curto, enquanto desafios mais complexos exigiram um tempo maior para encontrar uma solução. Isso indica que o sistema é capaz de lidar com diferentes níveis de dificuldade dos desafios.
+
+Vemos também que para alguns desafios o tempo registrado foi igual a zero segundos. Isso pode ocorrer quando o o desafio foi solucionado muito rapidamente, quase simultaneamente ao recebimento do desafio. Esses casos demonstram a eficiência do sistema em lidar com transações de mineração em tempo real.
+
+É importante ressaltar que os resultados obtidos podem variar dependendo do ambiente de execução, como a capacidade de processamento dos clientes e a latência da rede. Em um ambiente com mais recursos computacionais e uma rede mais rápida, é provável que as transações sejam resolvidas mais rapidamente.
+
+No geral, os resultados mostram que o sistema de mineração de transações criptográficas implementado é capaz de criar e resolver desafios criptográficos, registrar os vencedores corretamente e medir o tempo necessário para a solução. Isso demonstra a eficácia e a viabilidade do uso de chamadas de procedimento remoto (RPC) com gRPC para implementar um sistema distribuído de mineração de transações criptográficas.

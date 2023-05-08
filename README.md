@@ -50,3 +50,15 @@ Assim, após clonar o repositório, navegue para a pasta especifica do laborató
 ---
 
 ## Lab03
+
+* arquivo `README.md` contendo as instruções de execução, o link para o video e o relatório técnico do laboratório;
+
+Dentro da pasta `cripto` temos os seguintes arquivos:
+
+* arquivo `cliente.py` contendo a implementação do nosso cliente;
+
+* arquivos `mineração_pb2_grpc.py` e `mineração_pb2.py`, criados automaticamente de acordo com o arquivo proto;
+
+* arquivo `mineracao.proto`, contendo o proto do sistema;
+
+* arquivo `servidor.py` contendo a implementação do servidor; 
