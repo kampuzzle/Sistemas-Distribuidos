@@ -1,8 +1,21 @@
+syntax="proto3";
+
+package main;
+
+
 // Definir o serviço de aprendizado federado
 service FederatedLearning {
   // Registrar um cliente no servidor
   rpc RegisterClient (RegisterClientRequest) returns (RegisterClientResponse) {}
 
+  // Iniciar o treinamento de um cliente
+  rpc StartTraining (StartTrainingRequest) returns (StartTrainingResponse) {}
+
+  // Avaliar o modelo de um cliente
+  rpc EvaluateModel (EvaluateModelRequest) returns (EvaluateModelResponse) {}
+}
+
+service ClientLearning {
   // Iniciar o treinamento de um cliente
   rpc StartTraining (StartTrainingRequest) returns (StartTrainingResponse) {}
 

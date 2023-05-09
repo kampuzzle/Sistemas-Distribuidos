@@ -1,12 +1,8 @@
-import flwr
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPool2D,Flatten,Dense
 from tensorflow.keras.optimizers import SGD 
-from sklearn.model_selection import train_test_split
-import sys 
 
-import numpy as np
 def define_model(input_shape,num_classes):
   model = Sequential()
   model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=input_shape))
