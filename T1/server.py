@@ -1,3 +1,4 @@
+import threading
 import tensorflow as tf
 import numpy as np
 import grpc
@@ -26,6 +27,8 @@ global_model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=[
 # Obter os pesos iniciais do modelo global
 global_weights = global_model.get_weights()
 
+client_weights = {}
+
 # Criar um dicionário para armazenar os clientes registrados
 clients = {}
 
@@ -35,7 +38,7 @@ class FederatedLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
   # Registrar um cliente no servidor
   def RegisterClient(self, request, context):
     # Obter o ID, o IP e a porta do cliente da requisição
-    self.client_id = request.client_id
+    client_id = request.client_id
     client_ip = request.client_ip
     client_port = request.client_port
 
@@ -43,7 +46,9 @@ class FederatedLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
     confirmation_code = random.randint(0, 9999)
 
     # Armazenar o cliente no dicionário usando o ID como chave e o IP, a porta e o código como valores
-    clients[self.client_id] = (client_ip, client_port, confirmation_code)
+    clients[client_id] = (client_ip, client_port, confirmation_code)
+
+    
 
     # Imprimir uma mensagem informando que o cliente foi registrado
     print(f"Client {client_id} registered with IP {client_ip}, port {client_port} and confirmation code {confirmation_code}")
@@ -59,24 +64,11 @@ class FederatedLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
     # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
     global_weights = [np.array(w.weight) for w in request.global_weights]
 
-    # Atribuir os pesos do modelo global ao modelo local do cliente
-    global_model.set_weights(global_weights)
 
-    # Carregar os dados locais do cliente usando o número do round como índice
-    x_train = np.load(f"treino/x_train_{current_round}.npy")
-    y_train = np.load(f"treino/y_train_{current_round}.npy")
 
-    # Treinar o modelo local do cliente usando os dados locais por uma época
-    global_model.fit(x_train, y_train, epochs=1)
 
-    # Obter os pesos do modelo local do cliente após o treinamento
-    local_weights = global_model.get_weights()
 
-    # Obter o número de amostras da base de dados local
-    local_samples = len(x_train)
 
-    # Imprimir uma mensagem informando que o treinamento foi concluído
-    print(f"Training completed for round {current_round}")
 
     # Retornar uma resposta com os pesos do modelo local e o número de amostras como uma lista de Weight messages
     return federado_pb2.StartTrainingResponse(local_weights=[w for w in local_weights], local_samples=local_samples)
@@ -99,21 +91,30 @@ class FederatedLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
     loss, accuracy = global_model.evaluate(x_test, y_test)
 
     # Imprimir uma mensagem informando a acurácia obtida pelo cliente
-    print(f"Client {CLIENT_ID} achieved accuracy {accuracy} on round {register_response.current_round}")
+    # print(f"Client {CLIENT_ID} achieved accuracy {accuracy} on round {register_response.current_round}")
 
     # Retornar uma resposta com a acurácia
     return federado_pb2.EvaluateModelResponse(accuracy=accuracy)     
 
-
+def choose_clients():
+   
 
 def serve():
     print("Starting server...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+
+    # client chooser thread
+    client_chooser = threading.Thread(target=choose_clients)
+    client_chooser.start()
+
+
     federado_pb2_grpc.add_FederatedLearningServicer_to_server(FederatedLearningServicer(), server)
     server.add_insecure_port('[::]:8080')
     server.start()
     print("Listening on port 8080.")
     server.wait_for_termination()
+
+    
 
 
 if __name__ == "__main__":

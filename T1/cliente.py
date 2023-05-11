@@ -3,6 +3,7 @@ import grpc
 import numpy as np
 import federado_pb2
 import federado_pb2_grpc
+from concurrent import futures
 
 import model 
 
@@ -17,7 +18,7 @@ SERVER_PORT = 8080
 
 
 
-class ClientLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
+class ClientLearningServicer(federado_pb2_grpc.ClientLearningServicer):
 
   def StartTraining(self, request, context):
     # Obter o número do round atual da requisição
@@ -73,7 +74,14 @@ class ClientLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
     return federado_pb2.EvaluateModelResponse(accuracy=accuracy)
 
 
-
+def serve():
+  # Criar um servidor gRPC para receber requisições de treinamento e avaliação do servidor
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+  federado_pb2_grpc.add_ClientLearningServicer_to_server(ClientLearningServicer(), server)
+  server.add_insecure_port(f"{CLIENT_IP}:{CLIENT_PORT}")
+  server.start()
+  server.wait_for_termination()
+  
 
 
 # Criar um canal gRPC para se comunicar com o servidor
