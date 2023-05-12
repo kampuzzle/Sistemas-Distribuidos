@@ -73,6 +73,8 @@ class ClientLearningServicer(federado_pb2_grpc.ClientLearningServicer):
     # Retornar uma resposta com a acurácia
     return federado_pb2.EvaluateModelResponse(accuracy=accuracy)
 
+  def UpdateModelRequest(self, request, context): 
+    
 
 def serve():
   # Criar um servidor gRPC para receber requisições de treinamento e avaliação do servidor

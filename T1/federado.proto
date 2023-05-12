@@ -21,6 +21,8 @@ service ClientLearning {
 
   // Avaliar o modelo de um cliente
   rpc EvaluateModel (EvaluateModelRequest) returns (EvaluateModelResponse) {}
+
+  rpc UpdateModel (UpdateModelRequest) returns (UpdateModelResponse) {}
 }
 
 // Definir as mensagens de requisição e resposta
