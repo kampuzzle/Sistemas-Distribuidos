@@ -16,7 +16,7 @@ NUM_CLIENTS = 4 # Número de clientes a serem escolhidos em cada round
 MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
 MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
 TARGET_ACCURACY = 0.9 # Meta de acurácia
-TIMEOUT = 10 # Timeout de conexão com os clientes em segundos
+TIMEOUT = 100 # Timeout de conexão com os clientes em segundos
 
 # Definir o modelo global usando Keras
 global_model = define_model((28, 28, 1), 10)

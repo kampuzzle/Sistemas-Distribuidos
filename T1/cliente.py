@@ -11,8 +11,7 @@ import model
 # Definir o ID, o IP e a porta do cliente
 CLIENT_ID = None
 CLIENT_IP = "localhost"
-CLIENT_PORT = [50051, 50052, 50053]
-
+CLIENT_PORT = list(range(50051, 50061))  #  Range de portas para os clientes
 # Definir o IP e a porta do servidor
 SERVER_IP = "localhost"
 SERVER_PORT = 8080
@@ -22,28 +21,15 @@ global_model = model.define_model((28, 28, 1), 10)
 
 local_weights = global_model.get_weights()
 
+# Dado um id, retorna um número entre 1 e 3
+def getDatasetNumber(id): 
+    return id % 3 + 1
 
-# #  Atribuir os pesos do modelo global ao modelo local do cliente
-# def set_model_weights(model, vector):
-#     shapes = [w.shape for w in model.get_weights()]
-#     n_params = sum([np.prod(s) for s in shapes])
 
-#     arrays = [] 
-#     i = 0 
-#     for s in shapes: 
-#       size = np.prod(s) 
-#       array = vector[i:i+size].reshape(s) 
-#       arrays.append(array) 
-#       i += size
-#       if len(vector) != n_params: 
-#          raise ValueError("The vector length does not match the number of parameters")
-#     for layer, array in zip(model.layers, arrays): 
-#       layer.set_weights([array])
 
 def reshapeWeight(server_weight, client_weight):
     reshape_weight = []
 
-    # iterate through the weights in the model and reshape the corresponding sublist of the concatenated weight list
     for layer_weights in client_weight:
         n_weights = np.prod(layer_weights.shape)
         reshape_weight.append(np.array(server_weight[:n_weights]).reshape(layer_weights.shape))
@@ -92,8 +78,9 @@ class ClientLearningServicer(federado_pb2_grpc.ClientLearningServicer):
      # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
     global_weights = request.global_weights
 
-
-    reshapeWeight(global_weights, local_weights)
+    print(f"Received global weights with {len(global_weights)} elements")
+    local_weights = reshapeWeight(global_weights, local_weights)
+    global_model.set_weights(local_weights)
   
     # Imprimir uma mensagem informando a acurácia obtida pelo cliente
     print(f"Obtained accuracy is {accuracy}")
