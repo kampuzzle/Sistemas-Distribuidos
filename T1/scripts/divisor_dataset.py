@@ -6,6 +6,22 @@ import os
 # Baixar os dados MNIST
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
+# shuffle the training data
+p = np.random.permutation(len(x_train))
+x_train = x_train[p]
+y_train = y_train[p]
+
+# Normalizar os dados
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+
+
+
+
+y_train = np.eye(10)[y_train] 
+y_test = np.eye(10)[y_test]
+
 # Dividir os dados de treino em três conjuntos diferentes
 x_train_1, x_train_2, x_train_3 = np.split(x_train, 3)
 y_train_1, y_train_2, y_train_3 = np.split(y_train, 3)

@@ -12,9 +12,9 @@ import federado_pb2_grpc
 from model import define_model
 
 # Definir os parâmetros do servidor
-NUM_CLIENTS = 3 # Número de clientes a serem escolhidos em cada round
-MIN_CLIENTS = 2 # Quantidade mínima de clientes participando em cada round
-MAX_ROUNDS = 10 # Quantidade máxima de rounds necessários para concluir o treinamento
+NUM_CLIENTS = 4 # Número de clientes a serem escolhidos em cada round
+MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
+MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
 TARGET_ACCURACY = 0.9 # Meta de acurácia
 TIMEOUT = 10 # Timeout de conexão com os clientes em segundos
 
@@ -27,7 +27,11 @@ global_model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=[
 # Obter os pesos iniciais do modelo global
 global_weights = global_model.get_weights()
 
-client_weights = {}
+
+
+client_weights = []
+
+current_round = 0
 
 # Criar um dicionário para armazenar os clientes registrados
 clients = {}
@@ -48,54 +52,13 @@ class FederatedLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
     # Armazenar o cliente no dicionário usando o ID como chave e o IP, a porta e o código como valores
     clients[client_id] = (client_ip, client_port, confirmation_code)
 
-    
-
     # Imprimir uma mensagem informando que o cliente foi registrado
     print(f"Client {client_id} registered with IP {client_ip}, port {client_port} and confirmation code {confirmation_code}")
 
     # Retornar uma resposta com o código de confirmação e o número do round atual (inicialmente zero)
     return federado_pb2.RegisterClientResponse(confirmation_code=confirmation_code, current_round=0)
 
-  # # Iniciar o treinamento de um cliente
-  # def StartTraining(self, request, context):
-  #   # Obter o número do round atual da requisição
-  #   current_round = request.current_round
 
-  #   # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
-  #   global_weights = [np.array(w.weight) for w in request.global_weights]
-
-
-  #   if len(clients) < MIN_CLIENTS:
-  #     # Retornar uma resposta com os pesos do modelo global e o número de amostras como uma lista de Weight messages
-  #     return federado_pb2.StartTrainingResponse(local_weights=[w for w in global_weights], local_samples=[0])
-
-
-
-  #   # Retornar uma resposta com os pesos do modelo local e o número de amostras como uma lista de Weight messages
-  #   return federado_pb2.StartTrainingResponse(local_weights=[w for w in local_weights], local_samples=local_samples)
-
-  def EvaluateModel(self, request, context):
-    # Obter o número do round atual da requisição
-    current_round = request.current_round
-
-    # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
-    global_weights = [np.array(w.weight) for w in request.global_weights]
-
-    # Atribuir os pesos do modelo global ao modelo local do cliente
-    global_model.set_weights(global_weights)
-
-    # Carregar os dados locais do cliente usando o número do round como índice
-    x_test = np.load("teste/x_test.npy")
-    y_test = np.load("teste/y_test.npy")
-
-    # Avaliar o modelo local do cliente usando os dados de teste locais e os pesos do modelo global atualizados
-    loss, accuracy = global_model.evaluate(x_test, y_test)
-
-    # Imprimir uma mensagem informando a acurácia obtida pelo cliente
-    # print(f"Client {CLIENT_ID} achieved accuracy {accuracy} on round {register_response.current_round}")
-
-    # Retornar uma resposta com a acurácia
-    return federado_pb2.EvaluateModelResponse(accuracy=accuracy)     
 
 def choose_clients():
  
@@ -109,34 +72,20 @@ def choose_clients():
   chosen_clients = client_ids[:NUM_CLIENTS]
 
   # Imprimir uma mensagem informando os clientes escolhidos
-  print(f"Chosen clients: {chosen_clients}")
+  print(f"Choosen clients: {chosen_clients}")
 
   # Retornar os IDs dos clientes escolhidos
   return chosen_clients
 
-
-def federatedAveraging():
-    # Fazer a média dos pesos dos clientes
-    averaged_weights = []
-
-    # Para cada camada do modelo global
-    for layer in range(len(global_weights)):
-        # Criar uma lista para armazenar os pesos da camada
-        layer_weights = []
-
-        # Para cada cliente
-        for client_id in client_weights:
-            # Adicionar os pesos da camada do cliente à lista
-            layer_weights.append(client_weights[client_id][layer])
-
-        # Fazer a média dos pesos da camada
-        averaged_layer_weights = np.mean(layer_weights, axis=0)
-
-        # Adicionar os pesos da camada à lista
-        averaged_weights.append(averaged_layer_weights)
-    
-    return averaged_weights
-
+def federated_average(weights):
+    # Initialize the average weights to zero
+    avg_weights = [np.zeros_like(w) for w in weights[0]]
+    # Sum up the weights from each client
+    for w in weights:
+        avg_weights = [aw + cw for aw, cw in zip(avg_weights, w)]
+    # Divide by the number of clients
+    avg_weights = [aw / len(weights) for aw in avg_weights]
+    return avg_weights
 
 def train_client(client_id):
     client_ip, client_port, confirmation_code = clients[client_id]
@@ -144,20 +93,35 @@ def train_client(client_id):
     channel = grpc.insecure_channel(f"{client_ip}:{client_port}")
     stub = federado_pb2_grpc.ClientLearningStub(channel)
     try:
-        response = stub.StartTraining(federado_pb2.StartTrainingRequest(confirmation_code=confirmation_code, current_round=0), timeout=TIMEOUT)
-        client_weights[client_id] = [np.array(w.weight) for w in response.local_weights] 
+        response = stub.StartTraining(federado_pb2.StartTrainingRequest(current_round=current_round), timeout=TIMEOUT)
+        client_weights.append(response.local_weights)
     except grpc.RpcError as e:
         print(f"Error connecting to client {client_id}: {e}")
     print(f"Client {client_id} finished training.")
 
+def evaluate_clients_thread(client_id, fedav_weights):
+    client_ip, client_port, confirmation_code = clients[client_id]
+    print(f"Evaluating client {client_id}...")
+    channel = grpc.insecure_channel(f"{client_ip}:{client_port}")
+    stub = federado_pb2_grpc.ClientLearningStub(channel)
+    try:
+        response = stub.EvaluateModel(federado_pb2.EvaluateModelRequest(global_weights=fedav_weights), timeout=TIMEOUT)
+        client_accuracy = response.accuracy
+        print(f"Client {client_id} accuracy: {client_accuracy}")
+        return client_accuracy
+    except grpc.RpcError as e:
+        print(f"Error connecting to client {client_id}: {e}")
+        return 0.0
 
 
 def train_clients_thread():
-    while True:
+    global global_weights, current_round
+    i = 0
+    while i < MAX_ROUNDS:
         # Se o número de clientes registrados for menor que o mínimo, aguardar 5 segundos e tentar novamente
         if len(clients) < MIN_CLIENTS:
-            print("Waiting for more clients...")
-            time.sleep(5)
+            print("Currently connected clients:{}, need at least {}".format(len(clients), MIN_CLIENTS))
+            time.sleep(2)
             continue
         else:
             clients_to_train = choose_clients()
@@ -168,30 +132,34 @@ def train_clients_thread():
                 t.start()
             for t in threads:
                 t.join()
-        global_weights = federatedAveraging()
+        i += 1
 
-        # Evaluate all clients 
+        print("All chosen clients finished training.")
+
+        fedav_weights = federated_average(client_weights)
+        current_round += 1
+
+        client_weights.clear()
+        
+        #  Avaliando todos os clientes
+        threads = []
         for client_id in clients:
-            client_ip, client_port, confirmation_code = clients[client_id]
-            print(f"Evaluating client {client_id}...")
-            channel = grpc.insecure_channel(f"{client_ip}:{client_port}")
-            stub = federado_pb2_grpc.ClientLearningStub(channel)
-            try:
-                response = stub.EvaluateModel(federado_pb2.EvaluateModelRequest(confirmation_code=confirmation_code, current_round=0, global_weights=[ w for w in global_weights]), timeout=TIMEOUT)
-                print(f"Client {client_id} achieved accuracy {response.accuracy}")
-            except grpc.RpcError as e:
-                print(f"Error connecting to client {client_id}: {e}")
-            print(f"Client {client_id} finished evaluation.")
+            t = threading.Thread(target=evaluate_clients_thread, args=(client_id, fedav_weights,))
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join()
+
+        print("All clients finished evaluation.")
+        
 
 
 def serve():
     print("Starting server...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
 
-    # client chooser thread
-    client_chooser = threading.Thread(target=train_clients_thread)
-    client_chooser.start()
-
+    #  Thread para escolher os clientes a cada round
+    threading.Thread(target=train_clients_thread).start()
 
     federado_pb2_grpc.add_FederatedLearningServicer_to_server(FederatedLearningServicer(), server)
     server.add_insecure_port('[::]:8080')
@@ -200,7 +168,6 @@ def serve():
     server.wait_for_termination()
 
     
-
 
 if __name__ == "__main__":
     serve()

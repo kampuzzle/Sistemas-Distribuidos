@@ -5,61 +5,83 @@ import federado_pb2
 import federado_pb2_grpc
 from concurrent import futures
 
+import sys
 import model 
 
 # Definir o ID, o IP e a porta do cliente
-CLIENT_ID = "client1"
+CLIENT_ID = None
 CLIENT_IP = "localhost"
-CLIENT_PORT = 50051
+CLIENT_PORT = [50051, 50052, 50053]
 
 # Definir o IP e a porta do servidor
 SERVER_IP = "localhost"
 SERVER_PORT = 8080
 
+# modelo 
+global_model = model.define_model((28, 28, 1), 10)
+
+local_weights = global_model.get_weights()
+
+
+# #  Atribuir os pesos do modelo global ao modelo local do cliente
+# def set_model_weights(model, vector):
+#     shapes = [w.shape for w in model.get_weights()]
+#     n_params = sum([np.prod(s) for s in shapes])
+
+#     arrays = [] 
+#     i = 0 
+#     for s in shapes: 
+#       size = np.prod(s) 
+#       array = vector[i:i+size].reshape(s) 
+#       arrays.append(array) 
+#       i += size
+#       if len(vector) != n_params: 
+#          raise ValueError("The vector length does not match the number of parameters")
+#     for layer, array in zip(model.layers, arrays): 
+#       layer.set_weights([array])
+
+def reshapeWeight(server_weight, client_weight):
+    reshape_weight = []
+
+    # iterate through the weights in the model and reshape the corresponding sublist of the concatenated weight list
+    for layer_weights in client_weight:
+        n_weights = np.prod(layer_weights.shape)
+        reshape_weight.append(np.array(server_weight[:n_weights]).reshape(layer_weights.shape))
+        server_weight = server_weight[n_weights:]
+
+    return reshape_weight
 
 
 class ClientLearningServicer(federado_pb2_grpc.ClientLearningServicer):
 
   def StartTraining(self, request, context):
+    global local_weights
     # Obter o número do round atual da requisição
     current_round = request.current_round
 
-    # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
-    global_weights = [np.array(w.weight) for w in request.global_weights]
+    
+    # Carregar os dados locais do cliente usando o número do round atual como índice
+    x_train = np.load(f"treino/x_train_{CLIENT_ID}.npy")
+    y_train = np.load(f"treino/y_train_{CLIENT_ID}.npy")
 
-    # Atribuir os pesos do modelo global ao modelo local do cliente
-    global_model.set_weights(global_weights)
-
-    # Carregar os dados locais do cliente usando o número do round como índice
-    x_train = np.load(f"treino/x_train_{current_round}.npy")
-    y_train = np.load(f"treino/y_train_{current_round}.npy")
+    print(f"Training started for round {current_round}")
 
     # Treinar o modelo local do cliente usando os dados locais por uma época
     global_model.fit(x_train, y_train, epochs=1)
 
-    # Obter os pesos do modelo local do cliente após o treinamento
-    local_weights = global_model.get_weights()
 
-    # Obter o número de amostras da base de dados local
-    local_samples = len(x_train)
+    # Transformar pesos em um array de floats, tranformar o shape do vetor para uma unica dimensão
+    local_weights_flatten = [w.flatten() for w in global_model.get_weights()]
+    local_weights_flatten = np.concatenate(local_weights_flatten).tolist()
 
-    # Imprimir uma mensagem informando que o treinamento foi concluído
-    print(f"Training completed for round {current_round}")
 
     # Retornar uma resposta com os pesos do modelo local e o número de amostras como uma lista de Weight messages
-    return federado_pb2.StartTrainingResponse(local_weights=[w for w in local_weights], local_samples=local_samples)
+    return federado_pb2.StartTrainingResponse(local_weights=local_weights_flatten, local_samples=len(x_train))
 
 
   def EvaluateModel(self, request, context):
-    # Obter o número do round atual da requisição
-    current_round = request.current_round
-
-    # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
-    global_weights = [np.array(w.weight) for w in request.global_weights]
-
-    # Atribuir os pesos do modelo global ao modelo local do cliente
-    global_model.set_weights(global_weights)
-
+    global local_weights
+    
     # Carregar os dados locais do cliente usando o número do round como índice
     x_test = np.load("teste/x_test.npy")
     y_test = np.load("teste/y_test.npy")
@@ -67,92 +89,55 @@ class ClientLearningServicer(federado_pb2_grpc.ClientLearningServicer):
     # Avaliar o modelo local do cliente usando os dados de teste locais e os pesos do modelo global atualizados
     loss, accuracy = global_model.evaluate(x_test, y_test)
 
+     # Obter os pesos do modelo global da requisição como uma lista de arrays numpy
+    global_weights = request.global_weights
+
+
+    reshapeWeight(global_weights, local_weights)
+  
     # Imprimir uma mensagem informando a acurácia obtida pelo cliente
-    print(f"Client {CLIENT_ID} achieved accuracy {accuracy} on round {register_response.current_round}")
+    print(f"Obtained accuracy is {accuracy}")
 
     # Retornar uma resposta com a acurácia
     return federado_pb2.EvaluateModelResponse(accuracy=accuracy)
 
-  def UpdateModelRequest(self, request, context): 
-    
 
-def serve():
+def serve(port):
   # Criar um servidor gRPC para receber requisições de treinamento e avaliação do servidor
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
   federado_pb2_grpc.add_ClientLearningServicer_to_server(ClientLearningServicer(), server)
-  server.add_insecure_port(f"{CLIENT_IP}:{CLIENT_PORT}")
+  server.add_insecure_port(f"{CLIENT_IP}:{port}")
   server.start()
   server.wait_for_termination()
   
 
 
-# Criar um canal gRPC para se comunicar com o servidor
-channel = grpc.insecure_channel(f"{SERVER_IP}:{SERVER_PORT}")
+if __name__ == "__main__":
 
-# Criar um stub para acessar o serviço de aprendizado federado do servidor
-stub = federado_pb2_grpc.FederatedLearningStub(channel)
-
-# Registrar o cliente no servidor enviando uma requisição com o ID, o IP e a porta do cliente
-register_request = federado_pb2.RegisterClientRequest(client_id=CLIENT_ID, client_ip=CLIENT_IP, client_port=CLIENT_PORT)
-
-# Receber a resposta do servidor com o código de confirmação e o número do round atual
-register_response = stub.RegisterClient(register_request)
-
-# Imprimir uma mensagem informando que o cliente foi registrado com sucesso
-print(f"Client {CLIENT_ID} registered with confirmation code {register_response.confirmation_code} and current round {register_response.current_round}")
+  if len(sys.argv) > 1:
+    CLIENT_ID = sys.argv[1]
+    port = CLIENT_PORT[int(CLIENT_ID) - 1]
+  else:
+    print("Client ID not provided")
+    exit(1) 
 
 
-# modelo 
-global_model = model.define_model((28, 28, 1), 10)
+  # Criar um canal gRPC para se comunicar com o servidor
+  channel = grpc.insecure_channel(f"{SERVER_IP}:{SERVER_PORT}")
 
+  # Criar um stub para acessar o serviço de aprendizado federado do servidor
+  stub = federado_pb2_grpc.FederatedLearningStub(channel)
 
-# Entrar em um loop infinito para participar dos rounds de treinamento
-while True:
-  
-  # Obter os pesos do modelo global do servidor como uma lista de arrays numpy
-  global_weights = [np.array(w.weight) for w in register_response.global_weights]
+  # Registrar o cliente no servidor enviando uma requisição com o ID, o IP e a porta do cliente
+  register_request = federado_pb2.RegisterClientRequest(client_id=CLIENT_ID, client_ip=CLIENT_IP, client_port=port)
 
-  # Atribuir os pesos do modelo global ao modelo local do cliente
-  global_model.set_weights(global_weights)
+  # Receber a resposta do servidor com o código de confirmação e o número do round atual
+  register_response = stub.RegisterClient(register_request)
 
-  # Carregar os dados locais do cliente usando o número do round atual como índice
-  x_train = np.load(f"treino/x_train_{register_response.current_round}.npy")
-  y_train = np.load(f"treino/y_train_{register_response.current_round}.npy")
+  # Imprimir uma mensagem informando que o cliente foi registrado com sucesso
+  print(f"Client {CLIENT_ID} registered with confirmation code {register_response.confirmation_code} and current round {register_response.current_round}")
 
-  # Treinar o modelo local do cliente usando os dados locais por uma época
-  global_model.fit(x_train, y_train, epochs=1)
+  # Iniciar o servidor gRPC
+  serve(port)
 
-  # Obter os pesos do modelo local do cliente após o treinamento
-  local_weights = global_model.get_weights()
-
-  # Obter o número de amostras da base de dados local
-  local_samples = len(x_train)
-
-  # Enviar os pesos do modelo local e o número de amostras ao servidor como uma resposta de treinamento
-  start_training_response = federado_pb2.StartTrainingResponse(local_weights=[w for w in local_weights], local_samples=local_samples)
-
-  # Receber a próxima requisição de treinamento do servidor com o número do round atual e os pesos do modelo global atualizados
-  start_training_request = stub.StartTraining(start_training_response)
-
-  # Atualizar a resposta de registro com o número do round atual e os pesos do modelo global
-  register_response.current_round = start_training_request.current_round
-  register_response.global_weights = start_training_request.global_weights
-
-  # Avaliar o modelo local do cliente usando os dados de teste locais e os pesos do modelo global atualizados
-  x_test = np.load("teste/x_test.npy")
-  y_test = np.load("teste/y_test.npy")
-  global_model.set_weights(global_weights)
-  loss, accuracy = global_model.evaluate(x_test, y_test)
-
-  # Imprimir uma mensagem informando a acurácia obtida pelo cliente
-  print(f"Client {CLIENT_ID} achieved accuracy {accuracy} on round {register_response.current_round}")
-
-  # Enviar os pesos do modelo global e a acurácia ao servidor como uma resposta de avaliação
-  evaluate_model_response = stub.EvaluateModelResponse(global_weights=[w for w in global_weights], accuracy=accuracy)
-
-  # Receber a próxima requisição de avaliação do servidor com os pesos do modelo global atualizados
-  evaluate_model_request = stub.EvaluateModel(evaluate_model_response)
-
-  # Atualizar a resposta de registro com os pesos do modelo global
-  register_response.global_weights = evaluate_model_request.global_weights
 
