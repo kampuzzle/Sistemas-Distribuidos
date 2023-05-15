@@ -11,6 +11,8 @@ import federado_pb2_grpc
 
 from model import define_model
 
+import csv
+
 # Definir os parâmetros do servidor
 NUM_CLIENTS = 4 # Número de clientes a serem escolhidos em cada round
 MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
@@ -33,8 +35,23 @@ client_weights = []
 
 current_round = 0
 
+round_data = {}
+
 # Criar um dicionário para armazenar os clientes registrados
 clients = {}
+
+
+def reshapeWeight(server_weight, weights):
+    reshape_weight = []
+
+    for layer_weights in weights:
+        n_weights = np.prod(layer_weights.shape)
+        reshape_weight.append(np.array(server_weight[:n_weights]).reshape(layer_weights.shape))
+        server_weight = server_weight[n_weights:]
+
+    return reshape_weight
+
+
 
 # Criar uma classe para implementar o serviço de aprendizado federado definido no protobuf
 class FederatedLearningServicer(federado_pb2_grpc.FederatedLearningServicer):
@@ -77,15 +94,22 @@ def choose_clients():
   # Retornar os IDs dos clientes escolhidos
   return chosen_clients
 
-def federated_average(weights):
-    # Initialize the average weights to zero
-    avg_weights = [np.zeros_like(w) for w in weights[0]]
-    # Sum up the weights from each client
-    for w in weights:
-        avg_weights = [aw + cw for aw, cw in zip(avg_weights, w)]
-    # Divide by the number of clients
-    avg_weights = [aw / len(weights) for aw in avg_weights]
-    return avg_weights
+def federated_average(weights, samples):
+  # weights: a list of lists of weights from each client's model
+  # samples: a list of the number of samples used for training by each client
+  # returns: a list of weights that represent the weighted average of the local models
+  
+  # Initialize the average weights to zero
+  avg_weights = [np.zeros_like(w) for w in weights[0]]
+  
+  # Sum up the weighted weights from each client
+  for w, s in zip(weights, samples):
+    avg_weights = [aw + s * cw for aw, cw in zip(avg_weights, w)]
+  
+  # Divide by the total number of samples
+  avg_weights = [aw / sum(samples) for aw in avg_weights]
+  
+  return avg_weights
 
 def train_client(client_id):
     client_ip, client_port, confirmation_code = clients[client_id]
@@ -94,7 +118,7 @@ def train_client(client_id):
     stub = federado_pb2_grpc.ClientLearningStub(channel)
     try:
         response = stub.StartTraining(federado_pb2.StartTrainingRequest(current_round=current_round), timeout=TIMEOUT)
-        client_weights.append(response.local_weights)
+        client_weights.append((response.local_weights, response.local_samples))
     except grpc.RpcError as e:
         print(f"Error connecting to client {client_id}: {e}")
     print(f"Client {client_id} finished training.")
@@ -113,6 +137,17 @@ def evaluate_clients_thread(client_id, fedav_weights):
         print(f"Error connecting to client {client_id}: {e}")
         return 0.0
 
+
+def test_global_model(fedav_weights): 
+
+    x_test = np.load('teste/x_test.npy')
+    y_test = np.load('teste/y_test.npy')
+
+    # Test the global model
+    global_model.set_weights(fedav_weights)
+    _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
+    print(f"Global model accuracy: {accuracy}")
+    return accuracy
 
 def train_clients_thread():
     global global_weights, current_round
@@ -136,11 +171,18 @@ def train_clients_thread():
 
         print("All chosen clients finished training.")
 
-        fedav_weights = federated_average(client_weights)
+        weights, samples = zip(*client_weights)
+        fedav_weights = federated_average(weights, samples)
         current_round += 1
 
+
+        reshaped_weights = reshapeWeight(fedav_weights,global_weights)
+        accuracy = test_global_model(reshaped_weights)
+
+
         client_weights.clear()
-        
+
+        round_data[current_round] = {"round_id": current_round, "trainning_samples": sum(samples), "global_model_acc": accuracy, "clients": {}}
         #  Avaliando todos os clientes
         threads = []
         for client_id in clients:
@@ -151,9 +193,17 @@ def train_clients_thread():
             t.join()
 
         print("All clients finished evaluation.")
-        
+    
+    print("Training finished. Exiting..."")
 
-
+    # Salvando os dados do round em um arquivo CSV
+    with open('round_data.csv', 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=["round_id", "trainning_samples", "global_model_acc", "clients"])
+        writer.writeheader()
+        for row in round_data.values():
+            writer.writerow(row)
+              
+    return 
 def serve():
     print("Starting server...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
