@@ -19,7 +19,6 @@ MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
 MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
 TARGET_ACCURACY = 0.9 # Meta de acurácia
 TIMEOUT = 100 # Timeout de conexão com os clientes em segundos
-
 # Definir o modelo global usando Keras
 global_model = define_model((28, 28, 1), 10)
 
@@ -28,8 +27,6 @@ global_model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=[
 
 # Obter os pesos iniciais do modelo global
 global_weights = global_model.get_weights()
-
-
 
 client_weights = []
 
@@ -180,6 +177,10 @@ def train_clients_thread():
         accuracy = test_global_model(reshaped_weights)
 
 
+        if accuracy >= TARGET_ACCURACY: 
+            print("Accuracy target value was met at: " + accuracy + " Finishing training...")
+            break 
+
         client_weights.clear()
 
         round_data[current_round] = {"round_id": current_round, "trainning_samples": sum(samples), "global_model_acc": accuracy, "clients": {}}
@@ -194,7 +195,7 @@ def train_clients_thread():
 
         print("All clients finished evaluation.")
     
-    print("Training finished. Exiting..."")
+    print("Training finished. Exiting...")
 
     # Salvando os dados do round em um arquivo CSV
     with open('round_data.csv', 'w') as f:
