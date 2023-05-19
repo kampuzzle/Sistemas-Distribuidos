@@ -95,7 +95,7 @@ Cliente 1:
 
 ![Gráfico do cliente 1](clients_history_2/client_1_clients_history_2.png)
 
-No cliente 1, testamos conecta-lo apenas no round 3, para avaliar se o momento que ele começa o treinamento afeta a acurácia, porém podemos ver que não houve diferença, e ele rapidamente estava com uma ótima acurácia.
+No cliente 1, testamos conecta-lo apenas no round 3, para avaliar se o momento que ele começa o treinamento afeta a acurácia, porém podemos ver que não houve diferença, e ele rapidamente estava com uma ótima acurácia. Isso acontece porque o cliente que se conecta recebe os pesos globais que é a media federada dos pesos que foram treinados por outros clientes, assim, um novo cliente já começa com um modelo bem treinado. 
 
 Cliente 2:
 
