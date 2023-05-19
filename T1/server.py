@@ -16,7 +16,6 @@ import csv
 # Definir os parâmetros do servidor
 NUM_CLIENTS = 4 # Número de clientes a serem escolhidos em cada round
 MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
-# MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
 MAX_ROUNDS = 20 # Quantidade máxima de rounds necessários para concluir o treinamento
 TARGET_ACCURACY = 0.999 # Meta de acurácia
 TIMEOUT = 100 # Timeout de conexão com os clientes em segundos

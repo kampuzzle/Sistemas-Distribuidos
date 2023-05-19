@@ -15,14 +15,10 @@ y_train = y_train[p]
 x_train = x_train / 255.0
 x_test = x_test / 255.0
 
-
-
-
-
 y_train = np.eye(10)[y_train] 
 y_test = np.eye(10)[y_test]
 
-# Dividir os dados de treino em três conjuntos diferentes
+# Dividir os dados de treino em cinco conjuntos diferentes
 x_train_1, x_train_2, x_train_3, x_train_4, x_train_5 = np.split(x_train, 5)
 y_train_1, y_train_2, y_train_3, y_train_4, y_train_5 = np.split(y_train, 5)
 
