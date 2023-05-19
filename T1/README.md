@@ -10,3 +10,9 @@ O server irá treinar o modelo usando os clientes escolhidos e irá enviar o mod
 
 
 Ao final da execução, o server irá salvar o modelo treinado em um arquivo .h5 e gerar um arquivo .csv com os dados de cada rodada.
+
+
+Para visualizar os resultados, execute o script plot_graficos.py. Esse script irá gerar os gráficos de acurácia e perda do modelo ao longo das rodadas e irá salvar esses gráficos em arquivos .png. Para especificar qual historico, mude o nome da variavel do diretorio no codigo para o nome da pasta com os csvs dos historicos desejados.
+
+O script ira gerar um grafico de acuracia e para cada cliente, um comparando todos os clientes, e um com a acurácia para o modelo global. 
+

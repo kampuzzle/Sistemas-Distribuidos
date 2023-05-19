@@ -17,8 +17,8 @@ import csv
 NUM_CLIENTS = 4 # Número de clientes a serem escolhidos em cada round
 MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
 # MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
-MAX_ROUNDS = 3 # Quantidade máxima de rounds necessários para concluir o treinamento
-TARGET_ACCURACY = 0.9 # Meta de acurácia
+MAX_ROUNDS = 20 # Quantidade máxima de rounds necessários para concluir o treinamento
+TARGET_ACCURACY = 0.999 # Meta de acurácia
 TIMEOUT = 100 # Timeout de conexão com os clientes em segundos
 # Definir o modelo global usando Keras
 global_model = define_model((28, 28, 1), 10)
@@ -121,6 +121,8 @@ def train_client(client_id):
         client_weights.append((client_id,response.local_weights, response.local_samples))
     except grpc.RpcError as e:
         print(f"Error connecting to client {client_id}: {e}")
+        #remove o cliente da lista de clientes
+        clients.pop(client_id)
     print(f"Client {client_id} finished training.")
 
 def evaluate_clients_thread(client_id, fedav_weights, round_number):
@@ -137,6 +139,8 @@ def evaluate_clients_thread(client_id, fedav_weights, round_number):
         return client_accuracy
     except grpc.RpcError as e:
         print(f"Error connecting to client {client_id}: {e}")
+        #remove o cliente da lista de clientes
+        clients.pop(client_id)
         return 0.0
 
 
@@ -218,7 +222,6 @@ def train_clients_thread():
         for row in round_data.values():
             writer.writerow(row)
     print("Round data saved.")
-    print("Clients history:", clients_history)
    
     # Salvando os dados de treino de cada cliente em um arquivo CSV, cada cliente em um arquivo
     for i,round_info in enumerate(clients_history):
