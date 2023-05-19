@@ -16,7 +16,8 @@ import csv
 # Definir os parâmetros do servidor
 NUM_CLIENTS = 4 # Número de clientes a serem escolhidos em cada round
 MIN_CLIENTS = 3 # Quantidade mínima de clientes participando em cada round
-MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
+# MAX_ROUNDS = 5 # Quantidade máxima de rounds necessários para concluir o treinamento
+MAX_ROUNDS = 3 # Quantidade máxima de rounds necessários para concluir o treinamento
 TARGET_ACCURACY = 0.9 # Meta de acurácia
 TIMEOUT = 100 # Timeout de conexão com os clientes em segundos
 # Definir o modelo global usando Keras
@@ -36,6 +37,8 @@ round_data = {}
 
 # Criar um dicionário para armazenar os clientes registrados
 clients = {}
+
+clients_history = []
 
 
 def reshapeWeight(server_weight, weights):
@@ -115,12 +118,13 @@ def train_client(client_id):
     stub = federado_pb2_grpc.ClientLearningStub(channel)
     try:
         response = stub.StartTraining(federado_pb2.StartTrainingRequest(current_round=current_round), timeout=TIMEOUT)
-        client_weights.append((response.local_weights, response.local_samples))
+        client_weights.append((client_id,response.local_weights, response.local_samples))
     except grpc.RpcError as e:
         print(f"Error connecting to client {client_id}: {e}")
     print(f"Client {client_id} finished training.")
 
-def evaluate_clients_thread(client_id, fedav_weights):
+def evaluate_clients_thread(client_id, fedav_weights, round_number):
+    global clients_history
     client_ip, client_port, confirmation_code = clients[client_id]
     print(f"Evaluating client {client_id}...")
     channel = grpc.insecure_channel(f"{client_ip}:{client_port}")
@@ -129,6 +133,7 @@ def evaluate_clients_thread(client_id, fedav_weights):
         response = stub.EvaluateModel(federado_pb2.EvaluateModelRequest(global_weights=fedav_weights), timeout=TIMEOUT)
         client_accuracy = response.accuracy
         print(f"Client {client_id} accuracy: {client_accuracy}")
+        clients_history[round_number][client_id] = client_accuracy
         return client_accuracy
     except grpc.RpcError as e:
         print(f"Error connecting to client {client_id}: {e}")
@@ -147,8 +152,9 @@ def test_global_model(fedav_weights):
     return accuracy
 
 def train_clients_thread():
-    global global_weights, current_round
+    global global_weights, current_round, clients_history
     i = 0
+    clients_to_train = []
     while i < MAX_ROUNDS:
         # Se o número de clientes registrados for menor que o mínimo, aguardar 5 segundos e tentar novamente
         if len(clients) < MIN_CLIENTS:
@@ -158,6 +164,8 @@ def train_clients_thread():
         else:
             clients_to_train = choose_clients()
             threads = []
+            clients_history.append({})
+       
             for client_id in clients_to_train:
                 t = threading.Thread(target=train_client, args=(client_id,))
                 threads.append(t)
@@ -167,35 +175,41 @@ def train_clients_thread():
         i += 1
 
         print("All chosen clients finished training.")
-
-        weights, samples = zip(*client_weights)
+        ids, weights, samples = zip(*client_weights)
         fedav_weights = federated_average(weights, samples)
-        current_round += 1
+        
 
 
         reshaped_weights = reshapeWeight(fedav_weights,global_weights)
         accuracy = test_global_model(reshaped_weights)
+        
 
-
-        if accuracy >= TARGET_ACCURACY: 
-            print("Accuracy target value was met at: " + accuracy + " Finishing training...")
-            break 
-
+        
         client_weights.clear()
 
-        round_data[current_round] = {"round_id": current_round, "trainning_samples": sum(samples), "global_model_acc": accuracy, "clients": {}}
+        round_data[current_round] = {"round_id": current_round, "trainning_samples": sum(samples), "global_model_acc": accuracy, "clients": clients_to_train}
+        
         #  Avaliando todos os clientes
         threads = []
         for client_id in clients:
-            t = threading.Thread(target=evaluate_clients_thread, args=(client_id, fedav_weights,))
+            t = threading.Thread(target=evaluate_clients_thread, args=(client_id, fedav_weights, current_round))
             threads.append(t)
             t.start()
         for t in threads:
             t.join()
+        current_round += 1
+
+        if accuracy >= TARGET_ACCURACY: 
+            print("Accuracy target value was met at: " + str(accuracy) + " Finishing training...")
+            break 
+
 
         print("All clients finished evaluation.")
     
     print("Training finished. Exiting...")
+
+    # Salvando os pesos do modelo global em um arquivo
+    global_model.save_weights('global_model_weights.h5')
 
     # Salvando os dados do round em um arquivo CSV
     with open('round_data.csv', 'w') as f:
@@ -203,8 +217,20 @@ def train_clients_thread():
         writer.writeheader()
         for row in round_data.values():
             writer.writerow(row)
-              
+    print("Round data saved.")
+    print("Clients history:", clients_history)
+   
+    # Salvando os dados de treino de cada cliente em um arquivo CSV, cada cliente em um arquivo
+    for i,round_info in enumerate(clients_history):
+        for client_id, client_accuracy in round_info.items():
+            with open(f'clients_history/client_{client_id}_history.csv', 'a') as f:
+                writer = csv.DictWriter(f, fieldnames=["round_id", "accuracy"])
+                writer.writerow({"round_id": i, "accuracy": client_accuracy})
+        
+    print("Client history saved.")
     return 
+
+
 def serve():
     print("Starting server...")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
