@@ -20,6 +20,7 @@ O script ira gerar um grafico de acuracia e para cada cliente, um comparando tod
 
 ## Vídeo executando e mostrando uma análise
 
+https://youtu.be/5E5stN3CJ54
 
 ---
 
