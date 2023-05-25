@@ -1,0 +1,88 @@
+Você precisará construir um protótipo similar a resolvedor de provas de trabalho em um minerador de
+criptomoedas, com implementação baseada em comunicação indireta usando o modelo Publish/Subscriber e
+Filas de Mensagens. A implementação do minerador deverá ser realizada em Python com a biblioteca Paho1
+MQTT e o broker utilizado deverá ser o EMQX. Todo participante do sistema deverá implementar,
+simultaneamente, o papel do minerador e do controlador, conforme especificado no Laboratório V. Na
+inicialização do sistema, todos os participantes do (processos) deverão realizar uma eleição para definição do
+controlador (1) e dos mineradores (2).
+O papel de controlador terá o funcionamento igual do descrito no Laboratório V, conforme descrição a seguir
+(relembrando):
+a) Manter, enquanto estiver em execução, uma tabela com os seguintes registros:
+TransactionID Challenge Solution Winner (ClientID)
+int int str int
+• TransactionID: Identificador da transação, representada por um valor inteiro;
+• Challenge: Valor do desafio criptográfico associado à transação, representado por um número [1..6],
+onde 1 é o desafio mais fácil. Gere desafios aleatórios ou sequenciais (experimente as diferentes
+abordagens);
+• Solution: String que, se aplicada a função de hashing SHA-1, solucionará o desafio criptográfico
+proposto;
+• Winner: ClientID do usuário que solucionou o desafio criptográfico para a referida TransactionID
+(mesma linha da tabela). Enquanto o desafio não foi solucionado, considere que o ClientID = -1
+(indicador de que o desafio ainda está pendente);
+b) Ao carregar, deverá gerar um novo desafio com TransactionID = 0;
+c) Assinar a seguinte fila de mensagens:
+
+Nome da Fila Codificação da
+Mensagem
+Significado
+sd/solution ClientID <int>,
+TransactionID <int>,
+Solution <string>.
+Solution usada pelo ClientID para resolver o
+desafio associado à TransactionID. Importante:
+sempre enviar/ receber em formato string
+codificada em JSON2
+.
+d) Sempre que receber uma proposta de solução, o controlador deverá:
+d.1) Verificar se a TransactionID está pendente e se a solução atende aos requisitos do desafio proposto;
+d.2) Caso atenda, atualiza a tabela de estado das transações e publica o resultado na fila sd/result;
+d.3) Caso não atenda, publica o resultado na fila sd/result informando que a solução foi rejeitada.
+e) O controlador deve ficar em loop, só podendo ser interrompido com um <ctrl+c> ou similar, e prover um
+menu com as seguintes opções:
+Item do Menu Ação
+newChallenge Publica na fila sd/challenge um novo desafio (challenge), imprime a tabela
+atualizada e bloqueia até que o desafio seja resolvido por algum minerador.
+Sempre que houverem novas submissões de solução, mostrar a submissão e
+o resultado da avaliação (aprovado/ reprovado).
+Importante: sempre enviar/ receber em formato string codificada em JSON!
+exitController Sai do controlador e pára de assinar a fila sd/result.
+O papel de minerador deverá ter o funcionamento igual ao descrito no Laboratório V, relembrando:
+a) Manter, enquanto estiver em execução, uma tabela com os seguintes registros:
+TransactionID Challenge Solution Winner (ClientID)
+int int str int
+• TransactionID: Identificador da transação, representada por um valor inteiro;
+• Challenge: Valor do desafio criptográfico associado à transação, representado por um número [1..6],
+onde 1 é o desafio mais fácil. Gere desafios aleatórios ou sequenciais (experimente as diferentes
+abordagens);
+• Solution: String que, se aplicada a função de hashing SHA-1, solucionará o desafio criptográfico
+proposto;
+• Winner: ClientID do usuário que solucionou o desafio criptográfico para a referida TransactionID
+(mesma linha da tabela). Enquanto o desafio não foi solucionado, considere que o ClientID = -1;
+b) Ao iniciar, essa tabela deverá estar vazia e o minerador deverá bloquear até receber uma mensagem na fila
+sd/challenge. Ao receber essa mensagem, deverá imprimir em tela a recepção da mensagem, com o
+respectivo TransactionId e o desafio correspondente;
+c) Assinar a seguinte fila de mensagens no broker Pub/Sub:
+Nome da Fila Codificação da
+Mensagem
+Significado
+
+sd/challenge TransactionID <int>,
+Challenge <int>.
+
+Publicado pelo controlador!
+Contém o novo TransactionID e o Challenge
+associado a ele <int>[1..6].
+Importante: sempre enviar/ receber em formato
+string codificada em JSON!
+
+sd/result ClientID <int>,
+TransactionID <int>,
+Solution <string>,
+Result <int>.
+Publicado pelo controlador!
+Contém a resposta do controlador a respeito da
+submissão de uma solução para o respectivo
+TransactionID. Result = 0 caso a solução seja
+inválida, e Result != 0 caso a solução seja válida.
+Importante: sempre enviar/ receber em formato
+string codificada em JSON!
