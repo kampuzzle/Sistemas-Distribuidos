@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt
 import hashlib
 import random
 from clienteMqtt import Cliente 
-
+import time
 
 
 class Controlador(Cliente):
@@ -44,3 +44,10 @@ class Controlador(Cliente):
             mensagem = json.dumps({"client_id": client_id, "transaction_id": transaction_id,
                                 "solution": solucao, "result": result})
             self.publicar('sd/result', mensagem)
+
+    def loop(self):
+        self.client.message_callback_add('sd/solution', self.on_solution)
+        self.client.loop_start()
+        while True:
+            self.novo_desafio()
+            time.sleep(10)

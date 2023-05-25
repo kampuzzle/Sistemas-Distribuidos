@@ -37,18 +37,23 @@ class Minerador(Cliente):
     # Definir uma função de callback para receber os resultados do controlador na fila sd/result
     def on_result(self, client, userdata, message):
         dados = json.loads(message.payload.decode())
-        client_id = dados["client_id"]
-        transaction_id = dados["transaction_id"]
-        solucao = dados["solution"]
-        result = dados["result"]
-        if transaction_id < len(self.tabela) and client_id == self.id:
-            if result == 0:
-                solucao = self.gerar_solucao()
-                self.tabela[transaction_id][2] = solucao
-                mensagem = json.dumps({"client_id": self.id,
-                                    "transaction_id": transaction_id,
-                                    "solution": solucao})
-                self.publicar(sd_solution, mensagem)
-            else:
-                self.tabela[transaction_id][3] = client_id
+        print(dados)
+        # client_id = dados["client_id"]
+        # transaction_id = dados["transaction_id"]
+        # solucao = dados["solution"]
+        # result = dados["result"]
+        # if transaction_id < len(self.tabela) and client_id == self.id:
+        #     if result == 0:
+        #         solucao = self.gerar_solucao()
+        #         self.tabela[transaction_id][2] = solucao
+        #         mensagem = json.dumps({"client_id": self.id,
+        #                             "transaction_id": transaction_id,
+        #                             "solution": solucao})
+        #         self.publicar(sd_solution, mensagem)
+        #     else:
+        #         self.tabela[transaction_id][3] = client_id
+    
+    def loop(self):
+        self.client.loop_start()
+
 
