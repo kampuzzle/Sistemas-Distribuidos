@@ -15,8 +15,9 @@ class Cliente:
         r = self.client.publish(fila, mensagem)
 
     def assinar(self, fila, callback):
+        print("Assinando a fila", fila)
         self.client.subscribe(fila)
-        self.client.on_message = callback
+        self.client.message_callback_add(fila, callback)
 
     def print_(self, texto):
         print("Cliente ", self.id, " | ", texto)

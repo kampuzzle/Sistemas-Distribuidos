@@ -10,11 +10,14 @@ BLUE = '\033[34m'
 ENDC = '\033[m'
 
 
+
+
 class Controlador(Cliente):
 
     # Inicializar o controlador com uma tabela vazia de transações
     def __init__(self):
         self.print_("Controlador iniciado")
+        self.assinar('sd/solution', self.on_solution)
         self.tabela = []
 
     def print_(self, texto):
@@ -32,9 +35,10 @@ class Controlador(Cliente):
 
     # Definir uma função para verificar se uma solução é válida para um desafio
     def verificar_solucao(self, solucao, challenge):
-        hash = hashlib.sha1(solucao.encode()).hexdigest()
-        return hash.endswith("0" * challenge)
-
+        hash_solucao = hashlib.sha1(solucao.encode('utf-8')).digest()
+        binario = bin(int.from_bytes(hash_solucao, 'big'))[2:]
+        return binario[1:challenge+1] == '0'*challenge
+       
     # Definir uma função de callback para receber as soluções dos mineradores na fila sd/solution
     def on_solution(self, client, userdata, message):
         self.print_("Recebi uma solução!")
@@ -42,17 +46,28 @@ class Controlador(Cliente):
         client_id = dados["client_id"]
         transaction_id = dados["transaction_id"]
         solucao = dados["solution"]
+
+        if self.tabela[transaction_id][3] != -1:
+            mensagem = json.dumps({"client_id": client_id, "transaction_id": transaction_id,
+                                "solution": solucao, "result": 0})
+            self.publicar(f'sd/{client_id}/result', mensagem)
+            return
+
         if transaction_id < len(self.tabela) and self.tabela[transaction_id][3] == -1:
             challenge = self.tabela[transaction_id][1]
             if self.verificar_solucao(solucao, challenge):
                 self.tabela[transaction_id][2] = solucao
                 self.tabela[transaction_id][3] = client_id
                 result = 1
+                self.print_(texto=f"Minerador {client_id} resolveu o desafio {transaction_id}!"	)
             else:
                 result = 0
+                
+            
             mensagem = json.dumps({"client_id": client_id, "transaction_id": transaction_id,
                                 "solution": solucao, "result": result})
-            self.publicar('sd/result', mensagem)
+            self.publicar(f'sd/{client_id}/result', mensagem)
+
 
     def loop(self):
         # self.client.message_callback_add('sd/solution', self.on_solution)

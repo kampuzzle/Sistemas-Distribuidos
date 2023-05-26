@@ -24,7 +24,6 @@ threads.append(threading.Thread(target=controlador.loop))
 
 
 
-
 # Transformar os outros clientes em mineradores
 for cliente in clientes:
     if cliente != controlador:
@@ -33,8 +32,6 @@ for cliente in clientes:
         cliente.__init__()
 
 
-# Iniciar a comunicação entre o controlador e os mineradores
-controlador.novo_desafio()
 # Iniciar as threads
 for thread in threads:
     thread.start()
