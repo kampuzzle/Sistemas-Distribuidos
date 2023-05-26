@@ -21,7 +21,7 @@ controlador.__init__()
 threads = []
 
 threads.append(threading.Thread(target=controlador.loop))
-threads[-1].start()
+
 
 
 
@@ -36,7 +36,7 @@ for cliente in clientes:
 # Iniciar a comunicação entre o controlador e os mineradores
 controlador.novo_desafio()
 # Iniciar as threads
-for thread in threads[1:]:
+for thread in threads:
     thread.start()
     
 

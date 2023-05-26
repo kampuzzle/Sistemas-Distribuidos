@@ -11,10 +11,14 @@ class Cliente:
         self.client.loop_start()
 
     def publicar(self, fila, mensagem):
-        print("Publicando na fila", fila, "a mensagem", mensagem)
+        # print("Publicando na fila", fila, "a mensagem", mensagem)
         r = self.client.publish(fila, mensagem)
 
     def assinar(self, fila, callback):
         self.client.subscribe(fila)
         self.client.on_message = callback
+
+    def print_(self, texto):
+        print("Cliente ", self.id, " | ", texto)
+    
 

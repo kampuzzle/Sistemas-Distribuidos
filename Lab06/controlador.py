@@ -5,22 +5,30 @@ import random
 from clienteMqtt import Cliente 
 import time
 
+BLUE = '\033[34m'
+
+ENDC = '\033[m'
+
 
 class Controlador(Cliente):
 
     # Inicializar o controlador com uma tabela vazia de transações
     def __init__(self):
-        print("Controlador iniciado")
+        self.print_("Controlador iniciado")
         self.tabela = []
-        
+
+    def print_(self, texto):
+        print(BLUE,"Controlador ",ENDC, " | ", texto)
 
     # Definir uma função para gerar um novo desafio e publicá-lo na fila sd/challenge
     def novo_desafio(self):
+        self.print_("Gerando novo desafio...")
         transaction_id = len(self.tabela)
         challenge = random.randint(1, 6)
         self.tabela.append([transaction_id, challenge, None, -1])
         mensagem = json.dumps({"transaction_id": transaction_id, "challenge": challenge})
         self.publicar('sd/challenge', mensagem)
+        self.print_("Desafio {} gerado!".format(transaction_id))
 
     # Definir uma função para verificar se uma solução é válida para um desafio
     def verificar_solucao(self, solucao, challenge):
@@ -29,6 +37,7 @@ class Controlador(Cliente):
 
     # Definir uma função de callback para receber as soluções dos mineradores na fila sd/solution
     def on_solution(self, client, userdata, message):
+        self.print_("Recebi uma solução!")
         dados = json.loads(message.payload.decode())
         client_id = dados["client_id"]
         transaction_id = dados["transaction_id"]
@@ -46,7 +55,7 @@ class Controlador(Cliente):
             self.publicar('sd/result', mensagem)
 
     def loop(self):
-        self.client.message_callback_add('sd/solution', self.on_solution)
+        # self.client.message_callback_add('sd/solution', self.on_solution)
         self.client.loop_start()
         while True:
             self.novo_desafio()
