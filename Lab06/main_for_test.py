@@ -19,3 +19,5 @@ if __name__ == "__main__":
         t = threading.Thread(target=cliente.start)
         t.start()
         threads.append(t)
+
+

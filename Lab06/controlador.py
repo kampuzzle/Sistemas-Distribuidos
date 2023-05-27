@@ -22,9 +22,7 @@ class Controlador():
         self.cliente = client
 
         self.id = id
-        self.assinar('sd/solution', self.on_solution)
-
-        print("Criando controlador ", self.id)
+ 
 
     def print_(self, texto):
         print(BLUE,"Controlador ",ENDC, " | ", texto)
@@ -37,7 +35,6 @@ class Controlador():
     def publicar(self, fila, mensagem):
         self.cliente.publish(fila, mensagem)
 
-
     # Definir uma função para gerar um novo desafio e publicá-lo na fila sd/challenge
     def novo_desafio(self):
         self.print_("Gerando novo desafio...")
@@ -45,6 +42,7 @@ class Controlador():
         challenge = random.randint(1, 6)
         self.tabela.append([transaction_id, challenge, None, -1])
         mensagem = json.dumps({"transaction_id": transaction_id, "challenge": challenge})
+        print("Desafio gerado: ", mensagem)
         self.publicar('sd/challenge', mensagem)
         self.print_("Desafio {} gerado!".format(transaction_id))
 
@@ -53,6 +51,11 @@ class Controlador():
         hash_solucao = hashlib.sha1(solucao.encode('utf-8')).digest()
         binario = bin(int.from_bytes(hash_solucao, 'big'))[2:]
         return binario[1:challenge+1] == '0'*challenge
+
+    def on_connect(self, client, userdata, flags, rc):
+        self.print_("Conectado ao broker!")
+        self.assinar('sd/solution', self.on_solution)
+
        
     # Definir uma função de callback para receber as soluções dos mineradores na fila sd/solution
     def on_solution(self, client, userdata, message):
@@ -86,11 +89,17 @@ class Controlador():
 
     def loop(self):
         while True:
-            self.novo_desafio()
             time.sleep(10)
+            self.novo_desafio()
+
+            while self.tabela[-1][3] == -1:
+                self.print_(texto="Esperando por uma solução...")
+                time.sleep(1)
+
+            self.print_("Desafio resolvido!")
 
     def start(self):
-        
+        self.on_connect = self.on_connect
         self.cliente.connect(self.endereco)
         self.cliente.loop_start()
 

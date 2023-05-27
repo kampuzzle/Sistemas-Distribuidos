@@ -18,8 +18,6 @@ class Minerador():
         self.id = id_client
         self.print_("Minerador iniciado")
 
-        self.assinar('sd/challenge', self.on_challenge)
-        self.assinar('sd/{}/result'.format(self.id), self.on_result)
 
     
     def assinar(self, fila, callback):
@@ -63,6 +61,10 @@ class Minerador():
         self.publicar('sd/solution', mensagem)
 
         
+    def on_connect(self, client, userdata, flags, rc):
+        self.assinar('sd/challenge', self.on_challenge)
+        self.assinar('sd/{}/result'.format(self.id), self.on_result)
+
 
     # Definir uma função de callback para receber os resultados do controlador na fila sd/result
     def on_result(self, client, userdata, message):
@@ -86,10 +88,13 @@ class Minerador():
             self.print_("Solução rejeitada! Problema resolvido por{}".format(client_id))
             self.tabela[transaction_id][3] = client_id
             self.tabela[transaction_id][2] = solucao
-    
+        	
+        
             
     
     def start(self):
+        
+        self.cliente.on_connect = self.on_connect
         self.cliente.connect(self.endereco)
         self.cliente.loop_start()
 

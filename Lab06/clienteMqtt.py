@@ -100,6 +100,7 @@ class Cliente():
 
         while True:
             time.sleep(0.01)
+            
             if self.controller is not None:
                 break
         
