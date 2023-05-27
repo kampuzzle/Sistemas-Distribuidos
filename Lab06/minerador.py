@@ -2,7 +2,6 @@ import json
 import paho.mqtt.client as mqtt
 import hashlib
 import random
-from clienteMqtt import Cliente 
 import string
 import sys
 
@@ -10,13 +9,18 @@ YELLOW = '\033[33m'
 ENDC = '\033[m'
 
 
-class Minerador(Cliente):
+class Minerador():
     # Inicializar o minerador com uma tabela vazia de transações e assinar as filas sd/challenge e sd/result
-    def __init__(self):
+    def __init__(self, broker, id, client):
         self.tabela = []
         self.assinar('sd/challenge', self.on_challenge)
         self.assinar('sd/{}result'.format(self.id), self.on_result)
         self.print_("Minerador iniciado")
+
+        self.endereco = broker 
+        self.cliente = client
+        self.id = id
+
     
     def print_(self, texto):
         print(YELLOW,"Minerador ", self.id,ENDC, " | ", texto)
@@ -75,7 +79,8 @@ class Minerador(Cliente):
     
             
     
-    def loop(self):
+    def start(self):
+        self.client.connect(self.endereco)
         self.client.loop_start()
 
 

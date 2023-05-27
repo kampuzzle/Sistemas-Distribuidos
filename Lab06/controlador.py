@@ -2,7 +2,6 @@ import json
 import paho.mqtt.client as mqtt
 import hashlib
 import random
-from clienteMqtt import Cliente 
 import time
 
 BLUE = '\033[34m'
@@ -12,13 +11,17 @@ ENDC = '\033[m'
 
 
 
-class Controlador(Cliente):
+class Controlador():
 
     # Inicializar o controlador com uma tabela vazia de transações
-    def __init__(self):
+    def __init__(self, broker, id, client):
         self.print_("Controlador iniciado")
         self.assinar('sd/solution', self.on_solution)
         self.tabela = []
+
+        self.endereco = broker
+        self.cliente = client
+        self.id = id
 
     def print_(self, texto):
         print(BLUE,"Controlador ",ENDC, " | ", texto)
@@ -70,8 +73,13 @@ class Controlador(Cliente):
 
 
     def loop(self):
-        # self.client.message_callback_add('sd/solution', self.on_solution)
-        self.client.loop_start()
         while True:
             self.novo_desafio()
             time.sleep(10)
+
+    def start(self):
+        
+        self.cliente.connect(self.endereco)
+        self.cliente.loop_start()
+
+        self.loop()
