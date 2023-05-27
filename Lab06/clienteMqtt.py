@@ -13,15 +13,13 @@ ENDC = '\033[m'
 
 
 
-class Cliente: 
+class Cliente(): 
     # Inicializar o cliente com um id aleatório e se conectar ao broker
-    def __init__(self, broker, n):
+    def __init__(self, broker: str, n: int):
         self.id = random.randint(0, 1000)
         self.broker = broker
         self.client = mqtt.Client(str(self.id))
-        self.client.connect(broker)
-        self.client.loop_start()
-
+       
         self.controller = None
 
         self.min_clients = n
@@ -84,20 +82,20 @@ class Cliente:
             self.definir_vencedor()
             self.tabela_votos = {}
 
+
     def on_connect(self, client, userdata, flags, rc):
         self.print_("Conectado ao broker")
         self.assinar("sd/init", self.on_init)
         self.assinar("sd/voting", self.on_voting)
   
 
-
-
     def start(self): 
         self.client.on_connect = self.on_connect
-
+        self.client.connect(self.broker)
         self.client.loop_start()
-
-        time.sleep(0.6)
+        
+        self.print_(texto="Iniciando o cliente")
+        time.sleep(2)
         self.client.publish("sd/init", json.dumps({"client_id": self.id}))
 
         while True:
@@ -106,8 +104,10 @@ class Cliente:
                 break
         
         if self.controller == self.id:
-            Controlador(self.broker,self.id, self.clients_on_network).start()
+            c =  Controlador(self.broker,self.id, self.client)
+            c.start() 
         else:
-            Minerador(self.broker,self.id, self.clients_on_network).start()
+            m = Minerador(self.broker, self.id, self.client)
+            m.start()
 
 

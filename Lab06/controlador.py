@@ -16,15 +16,27 @@ class Controlador():
     # Inicializar o controlador com uma tabela vazia de transações
     def __init__(self, broker, id, client):
         self.print_("Controlador iniciado")
-        self.assinar('sd/solution', self.on_solution)
         self.tabela = []
 
         self.endereco = broker
         self.cliente = client
+
         self.id = id
+        self.assinar('sd/solution', self.on_solution)
+
+        print("Criando controlador ", self.id)
 
     def print_(self, texto):
         print(BLUE,"Controlador ",ENDC, " | ", texto)
+
+    def assinar(self, fila, callback):
+        self.print_("Assinando a fila " + fila)
+        self.cliente.subscribe(fila)
+        self.cliente.message_callback_add(fila, callback)
+
+    def publicar(self, fila, mensagem):
+        self.cliente.publish(fila, mensagem)
+
 
     # Definir uma função para gerar um novo desafio e publicá-lo na fila sd/challenge
     def novo_desafio(self):

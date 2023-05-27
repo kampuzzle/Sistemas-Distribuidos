@@ -11,17 +11,27 @@ ENDC = '\033[m'
 
 class Minerador():
     # Inicializar o minerador com uma tabela vazia de transações e assinar as filas sd/challenge e sd/result
-    def __init__(self, broker, id, client):
+    def __init__(self, broker, id_client, client):
         self.tabela = []
-        self.assinar('sd/challenge', self.on_challenge)
-        self.assinar('sd/{}result'.format(self.id), self.on_result)
-        self.print_("Minerador iniciado")
-
         self.endereco = broker 
         self.cliente = client
-        self.id = id
+        self.id = id_client
+        self.print_("Minerador iniciado")
+
+        self.assinar('sd/challenge', self.on_challenge)
+        self.assinar('sd/{}/result'.format(self.id), self.on_result)
 
     
+    def assinar(self, fila, callback):
+        self.print_("Assinando a fila " + fila)
+        self.cliente.subscribe(fila)
+        self.cliente.message_callback_add(fila, callback)
+
+    def publicar(self, fila, mensagem):
+        r = self.cliente.publish(fila, mensagem)
+
+
+
     def print_(self, texto):
         print(YELLOW,"Minerador ", self.id,ENDC, " | ", texto)
 
@@ -80,7 +90,7 @@ class Minerador():
             
     
     def start(self):
-        self.client.connect(self.endereco)
-        self.client.loop_start()
+        self.cliente.connect(self.endereco)
+        self.cliente.loop_start()
 
 
