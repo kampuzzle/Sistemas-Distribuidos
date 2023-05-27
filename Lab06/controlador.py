@@ -99,7 +99,7 @@ class Controlador():
             self.print_("Desafio resolvido!")
 
     def start(self):
-        self.on_connect = self.on_connect
+        self.cliente.on_connect = self.on_connect
         self.cliente.connect(self.endereco)
         self.cliente.loop_start()
 

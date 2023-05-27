@@ -79,11 +79,7 @@ class Minerador():
             self.print_("Solução aceita!")
             self.tabela[transaction_id][3] = client_id
         elif result == 0 and client_id == self.id:
-            self.print_("Solução rejeitada!, tentando novamente")
-            self.tabela[transaction_id][2] = self.gerar_solucao(self.tabela[transaction_id][1])
-            mensagem = json.dumps({"client_id": self.id, "transaction_id": transaction_id,
-                            "solution": self.tabela[transaction_id][2]})
-            self.print_("Enviando solução: {}".format(mensagem))
+            self.print_("Solução rejeitada!")
         else:
             self.print_("Solução rejeitada! Problema resolvido por{}".format(client_id))
             self.tabela[transaction_id][3] = client_id
