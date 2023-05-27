@@ -55,7 +55,14 @@ class Cliente():
         for client_id in self.tabela_votos:
             if self.tabela_votos[client_id] > maximo:
                 maximo = self.tabela_votos[client_id]
+                # se existe outro cliente com o mesmo número de votos, vence o com id maior 
                 vencedor = client_id
+                for client_id2 in self.tabela_votos:
+                    if self.tabela_votos[client_id2] == maximo and client_id2 > client_id:
+                        maximo = self.tabela_votos[client_id2]
+                        vencedor = client_id2
+                                
+                
         self.print_("O vencedor é " + str(vencedor))
         self.clients_on_network = []
         self.tabela_votos = {}
@@ -71,8 +78,6 @@ class Cliente():
         # publicar uma mensagem de votação na fila sd/voting
         if len(self.clients_on_network) >= self.min_clients:
             self.votar()
-
-  
 
     
     def on_voting(self, client, userdata, message):

@@ -89,7 +89,7 @@ class Controlador():
 
     def loop(self):
         while True:
-            time.sleep(10)
+            time.sleep(4)
             self.novo_desafio()
 
             while self.tabela[-1][3] == -1:
