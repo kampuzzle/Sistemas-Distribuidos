@@ -16,7 +16,7 @@ ENDC = '\033[m'
 class Cliente(): 
     # Inicializar o cliente com um id aleatório e se conectar ao broker
     def __init__(self, broker: str, n: int):
-        self.id = random.randint(0, 1000)
+        self.id = random.randint(0, 65536)
         self.broker = broker
         self.client = mqtt.Client(str(self.id))
        

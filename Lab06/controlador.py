@@ -66,7 +66,7 @@ class Controlador():
         solucao = dados["solution"]
 
         if self.tabela[transaction_id][3] != -1:
-            mensagem = json.dumps({"client_id": client_id, "transaction_id": transaction_id,
+            mensagem = json.dumps({"client_id": self.tabela[transaction_id][3], "transaction_id": transaction_id,
                                 "solution": solucao, "result": 0})
             self.publicar(f'sd/{client_id}/result', mensagem)
             return
@@ -81,6 +81,7 @@ class Controlador():
             else:
                 result = 0
                 
+                
             
             mensagem = json.dumps({"client_id": client_id, "transaction_id": transaction_id,
                                 "solution": solucao, "result": result})
@@ -89,7 +90,8 @@ class Controlador():
 
     def loop(self):
         while True:
-            time.sleep(4)
+            time.sleep(4)0
+
             self.novo_desafio()
 
             while self.tabela[-1][3] == -1:

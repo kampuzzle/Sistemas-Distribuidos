@@ -81,7 +81,7 @@ class Minerador():
         elif result == 0 and client_id == self.id:
             self.print_("Solução rejeitada!")
         else:
-            self.print_("Solução rejeitada! Problema resolvido por{}".format(client_id))
+            self.print_("Solução rejeitada! Problema resolvido por: {}".format(client_id))
             self.tabela[transaction_id][3] = client_id
             self.tabela[transaction_id][2] = solucao
         	
