@@ -9,7 +9,7 @@ BLUE = '\033[34m'
 
 ENDC = '\033[m'
 
-
+PINK = '\033[35m'
 
 
 class Controlador():
@@ -93,7 +93,7 @@ class Controlador():
         while True:
             time.sleep(4)
             sys.stdout.flush()
-            a = input("Digite 'n' para gerar um novo desafio, 'e' para encerrar: ")
+            a = input(PINK + "Digite 'n' para gerar um novo desafio, 'e' para encerrar: " + ENDC)
             if a == 'e':
                 break
             if a != 'n':
