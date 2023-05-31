@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 import hashlib
 import random
 import time
+import sys
 
 BLUE = '\033[34m'
 
@@ -39,7 +40,7 @@ class Controlador():
     def novo_desafio(self):
         self.print_("Gerando novo desafio...")
         transaction_id = len(self.tabela)
-        challenge = random.randint(1, 6)
+        challenge = random.randint(15, 20)
         self.tabela.append([transaction_id, challenge, None, -1])
         mensagem = json.dumps({"transaction_id": transaction_id, "challenge": challenge})
         print("Desafio gerado: ", mensagem)
@@ -90,7 +91,16 @@ class Controlador():
 
     def loop(self):
         while True:
-            time.sleep(4)0
+            time.sleep(4)
+            sys.stdout.flush()
+            a = input("Digite 'n' para gerar um novo desafio, 'e' para encerrar: ")
+            if a == 'e':
+                break
+            if a != 'n':
+                self.print_("Comando inválido!")
+                continue
+            
+
 
             self.novo_desafio()
 
