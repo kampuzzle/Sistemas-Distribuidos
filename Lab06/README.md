@@ -14,8 +14,7 @@ Quanto todos os clientes se conectarem, um menu irá perguntar se deseja encerra
 
 ## Vídeo executando
 
-https://drive.google.com/file/d/13QDhC5L9TKvk6kZA-sMeoc4HGJ5Pg2oa/view?usp=sharing
-
+https://drive.google.com/file/d/166dCv5G3pQisYR7_mGGA1pwEZ9-Eai6B/view?usp=sharing
 ---
 
 ## Descrição da implementação
