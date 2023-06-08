@@ -76,3 +76,11 @@ Para o desafio 1, o minerador **44490** resolveu o desafio, achando a solução 
 Para o desafio 2, o minerador **22475** resolveu o desafio, achando a solução =`{"client_id": 22475, "transaction_id": 2, "solution": "wyrfojgfbv"}`.
 
 Para o desafio 2, o minerador **49074** resolveu o desafio, com a solução = `{"client_id": 49074, "transaction_id": 3, "solution": "kgtbyiozgx"}`
+
+## Conclusão
+
+Com este trabalho, foi possível concluir que o método publish/subscribe, utilizando o protocolo MQTT especificamente, funcionou de forma eficiente e confiável para a troca de mensagens assíncrona entre o controlador e os mineradores. A arquitetura baseada em filas de mensagens permitiu uma comunicação fluida, onde os mineradores puderam enviar soluções para os desafios e receber os resultados correspondentes por meio do broker MQTT.
+
+Além disso, a troca de mensagens assíncrona proporcionada pelo MQTT permite que os mineradores executem suas tarefas de mineração sem interrupções, uma vez que podem enviar soluções e continuar trabalhando em paralelo, aguardando os resultados posteriormente. Isso aumenta a eficiência do sistema, mostrando outra vantagem do protocolo descrito.
+
+Em resumo, a utilização do método publish/subscribe com o MQTT para a troca de mensagens assíncrona demonstrou ser uma solução viável e eficaz no contexto do sistema de desafios e soluções. A simplicidade da implementação e os resultados satisfatórios obtidos indicam o potencial dessa abordagem para diversas aplicações distribuídas.
