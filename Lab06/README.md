@@ -10,7 +10,11 @@ O código main simula uma situacao em que N clientes se inscrevem e divide cada 
 
 Quanto todos os clientes se conectarem, um menu irá perguntar se deseja encerrar o programa ou gerar um novo desafio. Digite 'e' para encerrar o programa ou 'n' para gerar um novo desafio.
 
+---
+
 ## Vídeo executando
+
+https://drive.google.com/file/d/13QDhC5L9TKvk6kZA-sMeoc4HGJ5Pg2oa/view?usp=sharing
 
 ---
 
