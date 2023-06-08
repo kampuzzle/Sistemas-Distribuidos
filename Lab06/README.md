@@ -2,14 +2,16 @@
 
 ## Instruções para execução
 
-Execute o código main.py, acrescente o argumento N que rerpresenta o número de clientes que irão participar. 
+Execute o código main.py, acrescente o argumento N que representa o número de clientes que irão participar. 
 
 Por padrão, o código se conecta ao broker "broker.emqx.io", mas pode ser alterado se, quando executado, o main.py receber um segundo argumento que representa o endereço do broker. 
-
 
 O código main simula uma situacao em que N clientes se inscrevem e divide cada um em threads. Cada Cliente irá se manifestar no terminal, sendo diferenciado pelos ids e cores do terminal. 
 
 Quanto todos os clientes se conectarem, um menu irá perguntar se deseja encerrar o programa ou gerar um novo desafio. Digite 'e' para encerrar o programa ou 'n' para gerar um novo desafio.
+
+## Vídeo executando
+
 
 
 ## Descrição da implementação
@@ -18,9 +20,9 @@ O código main.py se conecta a um broker e a N clientes. Cada cliente é dividid
 
 A classe Cliente implementa as funções que irão coordenar a eleição. Quando n clients forem iniciados, a eleição começa e, através de votação aleatória, um líder é escolhido. O líder é responsável por enviar mensagens de controle para os outros clientes utilizando as funções de controle implementadas na classe Controlador. Por fim, o líder é responsável por enviar os desafios criptográficos para os outros clientes, alimentando uma fila no mqtt, que será consumida pelos outros clientes. Estes que irão utilizar as funções implementadas pela classe de Minerador.  
 
-O Controlador irá, em looping, gerar um desafio 
+O Controlador irá, em looping, gerar um sistema de desafios em que os mineradores tentam resolver os desafios enviando soluções para o controlador. O controlador verifica se as soluções são válidas e atribui o desafio resolvido a um minerador específico. As funções disponíveis na classe são responsáveis por iniciar a conexão com o broker MQTT, iniciar e verificar desafios, essa verificação é feita utilizando a função de hash SHA-1.
 
-
+Já o Minerador recebe desafios do controlador, gera soluções para esses desafios e envia as soluções de volta para o controlador. O minerador também recebe os resultados do controlador e atualiza sua tabela de transações com as informações relevantes. Ele gera uma solução aleatória para um desafio recebido, utilizando caracteres minúsculos aleatórios e a função de hash SHA-1. O minerador também recebe a informação se sua solução enviada foi aceita ou não. Se o resultado for 1, significa que a solução foi aceita pelo controlador e o minerador atualiza sua tabela de transações com o ID do cliente que resolveu o desafio. Se o resultado for 0 e o ID do cliente for igual ao ID do minerador, significa que a solução foi rejeitada. Caso contrário, significa que a solução foi resolvida por outro cliente e o minerador atualiza sua tabela com o ID do cliente e a solução correta.
 
 ## Testes 
 
