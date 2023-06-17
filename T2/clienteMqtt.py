@@ -5,7 +5,7 @@ import time
 import json
 
 from controlador import Controlador
-from minerador import Minerador
+from treinador import Treinador
 
 
 RED = '\033[31m'
@@ -15,16 +15,22 @@ ENDC = '\033[m'
 
 class Cliente(): 
     # Inicializar o cliente com um id aleatório e se conectar ao broker
-    def __init__(self, broker: str, n: int):
+    def __init__(self, broker: str, number_of_clients: int, min_clients_to_train: int, max_rounds: int, accuracy_threshold: float):
         self.id = random.randint(0, 65536)
         self.broker = broker
         self.client = mqtt.Client(str(self.id))
+
        
         self.controller = None
 
-        self.min_clients = n
+   
         self.clients_on_network = []
         self.tabela_votos = {}
+
+        self.number_of_clients = number_of_clients
+        self.min_clients_to_train = min_clients_to_train
+        self.max_rounds = max_rounds
+        self.accuracy_threshold = accuracy_threshold
 
     def print_(self, texto):
         print(RED, "Cliente ", self.id, ENDC, " | ", texto)
@@ -64,7 +70,6 @@ class Cliente():
                                 
                 
         self.print_("O vencedor é " + str(vencedor))
-        self.clients_on_network = []
         self.tabela_votos = {}
 
         self.controller = vencedor
@@ -76,7 +81,7 @@ class Cliente():
 
         # Se o número de clientes na rede for maior que min_clients,
         # publicar uma mensagem de votação na fila sd/voting
-        if len(self.clients_on_network) >= self.min_clients:
+        if len(self.clients_on_network) >= self.min_clients_to_train:
             self.votar()
 
     
@@ -88,6 +93,16 @@ class Cliente():
             self.tabela_votos = {}
 
 
+    def on_stop_training(self, client, userdata, message):
+        message = json.loads(message.payload.decode('utf-8'))
+        self.print_("Recebido stop_training do controlador")
+        self.print_("Parando o treinamento")
+        self.client.disconnect()
+        self.client.loop_stop()
+        self.client = None
+        self.controller = None
+        self.start()
+
     def on_connect(self, client, userdata, flags, rc):
         self.print_("Conectado ao broker")
         self.assinar("sd/init", self.on_init)
@@ -96,13 +111,15 @@ class Cliente():
 
     def start(self): 
         self.client.on_connect = self.on_connect
+        self.client.on_stop_training = self.on_stop_training
         self.client.connect(self.broker)
         self.client.loop_start()
         
         self.print_(texto="Iniciando o cliente")
         time.sleep(2)
         self.client.publish("sd/init", json.dumps({"client_id": self.id}))
-
+        
+        
         while True:
             time.sleep(0.01)
             
@@ -110,10 +127,18 @@ class Cliente():
                 break
         
         if self.controller == self.id:
-            c =  Controlador(self.broker,self.id, self.client)
+            c =  Controlador(self.broker,self.id,
+                             self.client,
+                             self.number_of_clients,
+                             self.min_clients_to_train,
+                             self.max_rounds,
+                             self.accuracy_threshold,
+                             self.clients_on_network)
+            time.sleep(2)
             c.start() 
         else:
-            m = Minerador(self.broker, self.id, self.client)
+            m = Treinador(self.broker, self.id, self.client)
             m.start()
 
+        self.clients_on_network = []
 

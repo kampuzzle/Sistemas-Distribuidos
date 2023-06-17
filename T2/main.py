@@ -3,9 +3,16 @@ import random
 import threading
 import sys
 
+NUM_CLIENTS = 2 # Número de clientes a serem criados
+MIN_CLIENT_TO_TRAIN = 1 # Quantidade mínima de clientes participando em cada round
+MAX_ROUNDS = 20 # Quantidade máxima de rounds necessários para concluir o treinamento
+TARGET_ACCURACY = 0.999 # Meta de acurácia
+
+
+
+
 
 if __name__ == "__main__":
-    num_clients = sys.argv[1]
 
     clientes = []
 
@@ -17,8 +24,11 @@ if __name__ == "__main__":
     
     threads = []
     # Criar uma thread para cada cliente e iniciar a thread
-    for i in range(int(num_clients)):
-        cliente = Cliente(broker, int(num_clients))
+    for i in range(int(NUM_CLIENTS)):
+        cliente = Cliente(broker,
+                          NUM_CLIENTS,
+                          MIN_CLIENT_TO_TRAIN,
+                          MAX_ROUNDS, TARGET_ACCURACY)
         print("Criando cliente ", cliente.id)
         clientes.append(cliente)
         t = threading.Thread(target=cliente.start)
