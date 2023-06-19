@@ -20,7 +20,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         broker = sys.argv[2]
     else:
-        broker = "broker.emqx.io"
+        broker = "mqtt://localhost:1883"
     
     threads = []
     # Criar uma thread para cada cliente e iniciar a thread
