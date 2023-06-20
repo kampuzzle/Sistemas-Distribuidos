@@ -56,19 +56,25 @@ class Cliente():
         
 
     def definir_vencedor(self):
-        maximo = 0
+        contagem_votos = {}
+    
+        for id_cliente, id_votado in self.tabela_votos.items():
+            if id_votado in contagem_votos: 
+                contagem_votos[id_votado] += 1
+            else: 
+                contagem_votos[id_votado] = 1
+
         vencedor = None
-        for client_id in self.tabela_votos:
-            if self.tabela_votos[client_id] > maximo:
-                maximo = self.tabela_votos[client_id]
-                # se existe outro cliente com o mesmo número de votos, vence o com id maior 
-                vencedor = client_id
-                for client_id2 in self.tabela_votos:
-                    if self.tabela_votos[client_id2] == maximo and client_id2 > client_id:
-                        maximo = self.tabela_votos[client_id2]
-                        vencedor = client_id2
-                                
-                
+        id_maximo = -1
+        maximo = -1
+        for id_votado, count, in contagem_votos.items(): 
+            
+            if count > maximo:
+                maximo = count
+                vencedor = id_votado
+            elif count == maximo:
+                if id_votado > vencedor: 
+                    vencedor = id_votado
         self.print_("O vencedor é " + str(vencedor))
         self.tabela_votos = {}
 
@@ -109,16 +115,15 @@ class Cliente():
         self.assinar("sd/voting", self.on_voting)
   
 
-    def start(self): 
+    def start(self, data_num): 
         self.client.on_connect = self.on_connect
         self.client.on_stop_training = self.on_stop_training
         self.client.connect(self.broker)
         self.client.loop_start()
         
         self.print_(texto="Iniciando o cliente")
-        time.sleep(2)
+        time.sleep(5)
         self.client.publish("sd/init", json.dumps({"client_id": self.id}))
-        
         
         while True:
             time.sleep(0.01)
@@ -127,17 +132,21 @@ class Cliente():
                 break
         
         if self.controller == self.id:
+            self.client.loop_stop()
+
             c =  Controlador(self.broker,self.id,
-                             self.client,
                              self.number_of_clients,
                              self.min_clients_to_train,
                              self.max_rounds,
                              self.accuracy_threshold,
-                             self.clients_on_network)
+                             self.clients_on_network,
+                             data_num)
             time.sleep(2)
             c.start() 
         else:
-            m = Treinador(self.broker, self.id, self.client)
+            self.client.loop_stop()
+
+            m = Treinador(self.broker, self.id,data_num)
             m.start()
 
         self.clients_on_network = []

@@ -38,6 +38,19 @@ np.save("../treino/y_train_4.npy", y_train_4)
 np.save("../treino/x_train_5.npy", x_train_5)
 np.save("../treino/y_train_5.npy", y_train_5)
 
+# Dividir os dados de teste em cinco conjuntos diferentes
+x_test_1, x_test_2, x_test_3, x_test_4, x_test_5 = np.split(x_test, 5)
+y_test_1, y_test_2, y_test_3, y_test_4, y_test_5 = np.split(y_test, 5)
 # Salvar os dados de teste em arquivos numpy na pasta de teste
-np.save("../teste/x_test.npy", x_test)
-np.save("../teste/y_test.npy", y_test)
+np.save("../teste/x_test_1.npy", x_test_1)
+np.save("../teste/y_test_1.npy", y_test_1)
+np.save("../teste/y_test_1.npy", y_test_1)
+np.save("../teste/x_test_2.npy", x_test_2)
+np.save("../teste/y_test_2.npy", y_test_2)
+np.save("../teste/x_test_3.npy", x_test_3)
+np.save("../teste/y_test_3.npy", y_test_3)
+np.save("../teste/x_test_4.npy", x_test_4)
+np.save("../teste/y_test_4.npy", y_test_4)
+np.save("../teste/x_test_5.npy", x_test_5)
+np.save("../teste/y_test_5.npy", x_test_5)
+

@@ -28,16 +28,15 @@ class Controlador():
 
     def __init__(self, broker,
                  id,
-                 client,
                  number_of_clients,
                  min_clients_to_train,
                  max_rounds,
                  accuracy_threshold,
-                 clients_on_network):
+                 clients_on_network,
+                 data_num):
         self.print_("Controlador iniciado")
         self.tabela = {}
         self.endereco = broker
-        self.cliente = client
 
         self.id = id
 
@@ -46,8 +45,13 @@ class Controlador():
         self.max_rounds = max_rounds
         self.accuracy_threshold = accuracy_threshold
         self.clients_on_network = clients_on_network
+        self.dataset_number = data_num
+
+        self.acuracias = []
 
         self.round = 0
+
+
  
     def print_(self, texto):
         print(BLUE,"Controlador ", " | ",ENDC, texto)
@@ -72,7 +76,10 @@ class Controlador():
         self.print_("Escolhendo os clientes que irão treinar")
         if self.id in self.clients_on_network:
             self.clients_on_network.remove(self.id)
-        self.clients_to_train = random.choices(self.clients_on_network, k=self.min_clients_to_train)
+
+        self.print_(self.clients_on_network)   
+        # choose clients for training without repetition 
+        self.clients_to_train = random.sample(self.clients_on_network, self.min_clients_to_train)
         self.print_("Clientes escolhidos: {}".format(self.clients_to_train))
         self.tabela_votos = {}
          
@@ -90,7 +97,7 @@ class Controlador():
         self.tabela[client_id] = weights
 
 
-        if len(self.tabela) == self.number_of_clients - 1:
+        if len(self.tabela) == self.min_clients_to_train:
             self.print_("Todos os pesos recebidos. Calculando média federada")
             new_weights = federated_average(list(self.tabela.values()))
             global_model.set_weights(new_weights)
@@ -107,22 +114,46 @@ class Controlador():
             if accuracy >= self.accuracy_threshold: 
                 self.print_("Acurácia atingida. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
-                self.cliente.loop_stop()
-                sys.exit(0)
+                
             
             if round >= self.max_rounds:
                 self.print_("Número máximo de rodadas atingido. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
-                self.cliente.loop_stop()
-                sys.exit(0)
+                
         
             self.print_("Iniciando nova rodada")
+            self.round += 1
+
+            self.new_round()
+
+    def on_end(self, client, userdata, message):
+        # Rebendo id e a acurácia do cliente
+        dados = json.loads(message.payload.decode())
+        client_id = dados["client_id"]
+        accuracy = dados["accuracy"]
+
+        self.acuracias.append(accuracy)
+
+        self.print_(self.acuracias)
+
+        if len(self.acuracias) == self.min_clients_to_train:
+            s = 0
+            for a in self.acuracias:
+                s += a
+            s = s/len(self.acuracias)
+            self.print_("Média global de acurácia: {}".format(s))
+            self.print_("Encerrando controlador")
+            self.cliente.loop_stop()
+            sys.exit(0)
+
     
     def evaluate(self):
-        x_test = np.load('teste/x_test.npy')
-        y_test = np.load('teste/y_test.npy')
        
+        x_test = np.load("teste/x_test_{}.npy".format(self.dataset_number))
+        y_test = np.load("teste/y_test_{}.npy".format(self.dataset_number))       
+        
         _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
+        
         return accuracy
 
 
@@ -134,7 +165,9 @@ class Controlador():
 
     def start(self):
         self.print_("Iniciando controlador")
+        self.cliente = mqtt.Client(str(self.id))
         self.cliente.on_connect = self.on_connect
+        self.cliente.on_end = self.on_end
         self.cliente.connect(self.endereco)
         time.sleep(5)
         self.new_round()
