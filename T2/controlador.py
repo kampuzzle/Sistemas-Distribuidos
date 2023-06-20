@@ -4,7 +4,7 @@ import hashlib
 import random
 import time
 import sys
-
+import numpy as np
 import model
 
 BLUE = '\033[34m'
@@ -82,7 +82,6 @@ class Controlador():
 
     def on_solution(self, client, userdata, message):	
         self.print_("Recebendo solução")
-        time.sleep(5)
         dados = json.loads(message.payload.decode())
         client_id = dados["client_id"]
         round = dados["round"]
@@ -90,12 +89,17 @@ class Controlador():
 
         self.tabela[client_id] = weights
 
-        if len(self.tabela) == number_of_clients:
+
+        if len(self.tabela) == self.number_of_clients - 1:
             self.print_("Todos os pesos recebidos. Calculando média federada")
             new_weights = federated_average(list(self.tabela.values()))
             global_model.set_weights(new_weights)
+            converted_weights = []
+            for e in new_weights: 
+                converted_weights.append(e.tolist())
+
             self.print_("Enviando novo modelo para os treinadores")
-            self.publicar('sd/new_model', json.dumps({"round": round, "weights": new_weights}))
+            self.publicar('sd/new_model', json.dumps({"round": round, "weights": converted_weights}))
             self.tabela = {}
 
             accuracy = self.evaluate()

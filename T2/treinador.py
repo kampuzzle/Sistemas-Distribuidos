@@ -68,20 +68,28 @@ class Treinador():
         print("Treinando com o dataset {}".format(self.dataset_number))
         self.model.fit(X, y, epochs=1)
         self.local_weights = self.model.get_weights()
+        print(self.local_weights)  
+       
 
-        # convert to a json acceptable format
-        local_weights = pd.DataFrame( self.local_weights).to_json(orient='values')
 
-        mensagem = json.dumps({"client_id": self.id, "round": round })
-                            # "weights":local_weights})
+        converted_weights = []
+        for e in self.local_weights: 
+            converted_weights.append(e.tolist())
+
+        mensagem = json.dumps({"client_id": self.id, "round": round,  "weights":converted_weights })
         self.print_("Treino terminado, enviando peso...")
         self.publicar('sd/solution', mensagem)
 
     def on_new_model(self, client, userdata, message):
         self.print_("Recebendo novo modelo")
         dados = json.loads(message.payload.decode())
-        weights = dados["weights"]
-        self.model.set_weights(weights)
+        
+        converted_weights = []
+        for e in dados["weights"]: 
+            converted_weights.append(np.array(e))
+       
+        self.model.set_weights(converted_weights)
+        self.print_("pesos setados")
    
     def on_connect(self, client, userdata, flags, rc):
         self.assinar('sd/start_training', self.on_start_training)
