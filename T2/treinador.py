@@ -48,11 +48,10 @@ class Treinador():
 
 
     def evaluate(self):
-        dataset_test_number  = int(self.dataset_number) % 5 + 1
 
-        x_test = np.load("teste/x_test_{}.npy".format(dataset_test_number))
-        y_test = np.load("teste/y_test_{}.npy".format(dataset_test_number))       
-        
+        x_test = np.load("teste/x_test_{}.npy".format(self.dataset_number))
+        y_test = np.load("teste/y_test_{}.npy".format(self.dataset_number))       
+        y_test = [y.tolist() for y in y_test]  # convert arrays to lists of floats
         _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
         
         return accuracy

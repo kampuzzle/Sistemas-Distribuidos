@@ -68,6 +68,7 @@ class Controlador():
     def on_connect(self, client, userdata, flags, rc):
         self.print_("Conectado ao broker!")
         self.assinar('sd/solution', self.on_solution)
+        self.assinar('sd/on_end_result',self.on_end_result)
 
 
     def new_round(self):
@@ -126,7 +127,7 @@ class Controlador():
 
             self.new_round()
 
-    def on_end(self, client, userdata, message):
+    def on_end_result(self, client, userdata, message):
         # Rebendo id e a acurácia do cliente
         dados = json.loads(message.payload.decode())
         client_id = dados["client_id"]
@@ -151,7 +152,9 @@ class Controlador():
        
         x_test = np.load("teste/x_test_{}.npy".format(self.dataset_number))
         y_test = np.load("teste/y_test_{}.npy".format(self.dataset_number))       
-        
+        print(y_test)
+        # y_test = [y.tolist() for y in y_test]  # convert arrays to lists of floats
+
         _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
         
         return accuracy
@@ -167,7 +170,6 @@ class Controlador():
         self.print_("Iniciando controlador")
         self.cliente = mqtt.Client(str(self.id))
         self.cliente.on_connect = self.on_connect
-        self.cliente.on_end = self.on_end
         self.cliente.connect(self.endereco)
         time.sleep(5)
         self.new_round()
