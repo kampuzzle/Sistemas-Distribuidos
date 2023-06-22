@@ -48,11 +48,8 @@ class Controlador():
         self.dataset_number = data_num
 
         self.acuracias = []
-
         self.round = 0
 
-
- 
     def print_(self, texto):
         print(BLUE,"Controlador ", " | ",ENDC, texto)
 
@@ -115,11 +112,13 @@ class Controlador():
             if accuracy >= self.accuracy_threshold: 
                 self.print_("Acurácia atingida. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
+                return
                 
             
             if round >= self.max_rounds:
                 self.print_("Número máximo de rodadas atingido. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
+                return
                 
         
             self.print_("Iniciando nova rodada")
@@ -128,6 +127,7 @@ class Controlador():
             self.new_round()
 
     def on_end_result(self, client, userdata, message):
+        self.print_("Recebendo resultado final")
         # Rebendo id e a acurácia do cliente
         dados = json.loads(message.payload.decode())
         client_id = dados["client_id"]
@@ -152,19 +152,10 @@ class Controlador():
        
         x_test = np.load("teste/x_test_{}.npy".format(self.dataset_number))
         y_test = np.load("teste/y_test_{}.npy".format(self.dataset_number))       
-        print(y_test)
-        # y_test = [y.tolist() for y in y_test]  # convert arrays to lists of floats
 
         _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
         
         return accuracy
-
-
-        
-
-            
-    
- 
 
     def start(self):
         self.print_("Iniciando controlador")

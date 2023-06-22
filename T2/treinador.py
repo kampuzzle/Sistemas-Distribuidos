@@ -7,7 +7,7 @@ import sys
 import numpy as np
 import model
 import pandas as pd
-
+import time
 YELLOW = '\033[33m'
 ENDC = '\033[m'
 
@@ -36,13 +36,12 @@ class Treinador():
     def publicar(self, fila, mensagem):
         r = self.cliente.publish(fila, mensagem)
         # print status 
-        if r[0] == mqtt.MQTT_ERR_SUCCESS:
-            self.print_("Mensagem publicada com sucesso na fila " + fila)
-        elif r[0] == mqtt.MQTT_ERR_NO_CONN:
+   
+        if r[0] == mqtt.MQTT_ERR_NO_CONN:
             self.print_("Erro. Cliente desconectado.")
         elif r[0] == mqtt.MQTT_ERR_QUEUE_SIZE:
             self.print_("Erro. Fila cheia.")
-        else:
+        elif r[0] != mqtt.MQTT_ERR_SUCCESS:
             self.print_("Erro. Código de erro: " + str(r[0]))
 
 
@@ -51,8 +50,13 @@ class Treinador():
 
         x_test = np.load("teste/x_test_{}.npy".format(self.dataset_number))
         y_test = np.load("teste/y_test_{}.npy".format(self.dataset_number))       
-        y_test = [y.tolist() for y in y_test]  # convert arrays to lists of floats
-        _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
+        
+
+        y_pred = self.model.predict(x_test)
+        y_pred = np.argmax(y_pred, axis=1)
+        y_test = np.argmax(y_test, axis=1)
+
+        accuracy = np.mean(y_pred == y_test)
         
         return accuracy
     
@@ -63,20 +67,23 @@ class Treinador():
 
     # Definir uma função de callback para receber os desafios do controlador na fila sd/challenge
     def on_start_training(self, client, userdata, message):
-        self.print_("Hora de treinar!")
         dados = json.loads(message.payload.decode())
-        round = dados["round"]
         clients_ids = dados["clients_on_network"]
 
-        # if this trainer is not in the list of clients that will train, then it will not train
         if self.id not in clients_ids:
-            self.print_("Não estou na lista de clientes que irão treinar")
+            self.print_("Não estou na lista de clientes que irão treinar :(")
             return
+        self.print_("Hora de treinar!")
+        
+        round = dados["round"]
+
+
 
         X = np.load("treino/x_train_{}.npy".format(self.dataset_number))
         y = np.load("treino/y_train_{}.npy".format(self.dataset_number))
         self.print_("Treinando com o dataset {}".format(self.dataset_number))
         self.model.fit(X, y, epochs=1)
+
         self.local_weights = self.model.get_weights()
        
 
@@ -111,11 +118,14 @@ class Treinador():
 
         accuracy = self.evaluate()
 
-        self.publicar('sd/end_result', json.dumps({"client_id": self.id, "accuracy": accuracy}))
+        if accuracy > 0:
+            self.publicar('sd/end_result', json.dumps({"client_id": self.id, "accuracy": accuracy}))
 
 
-        self.cliente.loop_stop()
-        sys.exit(0)
+
+        # time.sleep(1)
+        # self.cliente.loop_stop()
+        # sys.exit(0)
 
 
 

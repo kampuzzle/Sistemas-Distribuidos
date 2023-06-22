@@ -50,9 +50,9 @@ class Cliente():
                         })
         self.publicar("sd/voting", msg)
         
-        if self.clients_on_network[vote] not in self.tabela_votos:
-            self.tabela_votos[self.clients_on_network[vote]] = 0
-        self.tabela_votos[self.clients_on_network[vote]] += 1 
+        # if self.clients_on_network[vote] not in self.tabela_votos:
+        #     self.tabela_votos[self.clients_on_network[vote]] = 0
+        # self.tabela_votos[self.clients_on_network[vote]] += 1 
         
 
     def definir_vencedor(self):
