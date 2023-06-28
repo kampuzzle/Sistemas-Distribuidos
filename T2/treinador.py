@@ -117,7 +117,7 @@ class Treinador():
 
 
         accuracy = self.evaluate()
-
+        print(accuracy)
         if accuracy > 0:
             self.publicar('sd/end_result', json.dumps({"client_id": self.id, "accuracy": accuracy}))
 

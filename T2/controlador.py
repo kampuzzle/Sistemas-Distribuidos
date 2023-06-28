@@ -65,7 +65,7 @@ class Controlador():
     def on_connect(self, client, userdata, flags, rc):
         self.print_("Conectado ao broker!")
         self.assinar('sd/solution', self.on_solution)
-        self.assinar('sd/on_end_result',self.on_end_result)
+        self.assinar('sd/end_result',self.on_end_result)
 
 
     def new_round(self):
@@ -112,19 +112,16 @@ class Controlador():
             if accuracy >= self.accuracy_threshold: 
                 self.print_("Acurácia atingida. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
-                return
-                
             
-            if round >= self.max_rounds:
+            elif round >= self.max_rounds:
                 self.print_("Número máximo de rodadas atingido. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
-                return
                 
-        
-            self.print_("Iniciando nova rodada")
-            self.round += 1
+            else: 
+                self.print_("Iniciando nova rodada")
+                self.round += 1
 
-            self.new_round()
+                self.new_round()
 
     def on_end_result(self, client, userdata, message):
         self.print_("Recebendo resultado final")
@@ -135,13 +132,13 @@ class Controlador():
 
         self.acuracias.append(accuracy)
 
-        self.print_(self.acuracias)
 
         if len(self.acuracias) == self.min_clients_to_train:
             s = 0
             for a in self.acuracias:
                 s += a
             s = s/len(self.acuracias)
+            
             self.print_("Média global de acurácia: {}".format(s))
             self.print_("Encerrando controlador")
             self.cliente.loop_stop()
@@ -153,7 +150,20 @@ class Controlador():
         x_test = np.load("teste/x_test_{}.npy".format(self.dataset_number))
         y_test = np.load("teste/y_test_{}.npy".format(self.dataset_number))       
 
-        _, accuracy = global_model.evaluate(x_test, y_test, verbose=0)
+        x_pred = global_model.predict(x_test)
+
+        accuracy = 0
+        for i in range(len(x_pred)):
+            if np.argmax(x_pred[i]) == np.argmax(y_test[i]):
+                accuracy += 1
+
+        
+        accuracy = accuracy/len(x_pred)
+        
+          
+
+
+
         
         return accuracy
 
