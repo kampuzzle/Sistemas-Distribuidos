@@ -2,6 +2,9 @@ from clienteMqtt import Cliente
 import random
 import threading
 import sys
+import pandas as pd
+from matplotlib import pyplot as plt
+
 
 NUM_CLIENTS = 5 # Número de clientes a serem criados
 MIN_CLIENT_TO_TRAIN = 3 # Quantidade mínima de clientes participando em cada round
@@ -36,4 +39,18 @@ if __name__ == "__main__":
         data_num += 1
         threads.append(t)
 
+    # wait to join 
+    for t in threads:
+        t.join()
 
+    print("Finalizando")
+
+    # gera os graficos dos clientes
+    for c in clientes:
+        file = pd.read_csv("graficos_clients/acuracias_{}.csv".format(c.id))
+        plt.plot(file)
+        plt.title("Acuracia do cliente {}".format(c.id))
+        plt.title("Acuracia do cliente {}".format(c.id))
+        plt.xlabel("Rounds")
+        plt.ylabel("Acuracia")
+        plt.savefig("graficos_clients/acuracia_{}.png".format(c.id))

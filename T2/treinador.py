@@ -8,6 +8,7 @@ import numpy as np
 import model
 import pandas as pd
 import time
+
 YELLOW = '\033[33m'
 ENDC = '\033[m'
 
@@ -19,7 +20,7 @@ global_model = model.define_model((28, 28, 1), 10)
 
 class Treinador():
     def __init__(self, broker, id_client, data_num):
-
+        self.acuracias = []
         self.endereco = broker
         
         # get a number form 1 to 5, which will be the dataset that this trainer will use based on the client id
@@ -84,6 +85,9 @@ class Treinador():
         self.print_("Treinando com o dataset {}".format(self.dataset_number))
         self.model.fit(X, y, epochs=1)
 
+        self.acuracias.append(self.evaluate())
+        self.print_("Acurácia: {}".format(self.acuracias[-1]))
+
         self.local_weights = self.model.get_weights()
        
 
@@ -117,15 +121,17 @@ class Treinador():
 
 
         accuracy = self.evaluate()
-        print(accuracy)
         if accuracy > 0:
+            self.print_("Acurácia final atingida: {}".format(accuracy))
             self.publicar('sd/end_result', json.dumps({"client_id": self.id, "accuracy": accuracy}))
-
-
-
-        # time.sleep(1)
-        # self.cliente.loop_stop()
-        # sys.exit(0)
+            # armazenar cada valor de acuracia e round no formato round,acuracia
+            df = pd.DataFrame(self.acuracias)
+            df.to_csv("graficos_clients/acuracias_{}.csv".format(self.id))
+       
+        time.sleep(1)
+        self.cliente.loop_stop()
+        self.print_("Cliente desconectado")
+        exit()
 
 
 
