@@ -124,14 +124,15 @@ class Treinador():
         if accuracy > 0:
             self.print_("Acurácia final atingida: {}".format(accuracy))
             self.publicar('sd/end_result', json.dumps({"client_id": self.id, "accuracy": accuracy}))
+            
+            time.sleep(5)
             # armazenar cada valor de acuracia e round no formato round,acuracia
             df = pd.DataFrame(self.acuracias)
             df.to_csv("graficos_clients/acuracias_{}.csv".format(self.id))
        
-        time.sleep(1)
-        self.cliente.loop_stop()
+        time.sleep(2)
         self.print_("Cliente desconectado")
-        exit()
+        self.cliente.disconnect()
 
 
 

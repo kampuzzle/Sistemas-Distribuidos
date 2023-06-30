@@ -8,8 +8,8 @@ from matplotlib import pyplot as plt
 
 NUM_CLIENTS = 5 # Número de clientes a serem criados
 MIN_CLIENT_TO_TRAIN = 3 # Quantidade mínima de clientes participando em cada round
-MAX_ROUNDS = 3 # Quantidade máxima de rounds necessários para concluir o treinamento
-TARGET_ACCURACY = 0.98 # Meta de acurácia
+MAX_ROUNDS = 15 # Quantidade máxima de rounds necessários para concluir o treinamento
+TARGET_ACCURACY = 0.99 # Meta de acurácia
 
 
 

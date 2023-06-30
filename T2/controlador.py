@@ -114,7 +114,7 @@ class Controlador():
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
             
             elif round >= self.max_rounds:
-                self.print_("Número máximo de rodadas atingido. Encerrando treinamento")
+                self.print_("Número máximo de rodadas ating ido. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
                 
             else: 
@@ -125,24 +125,24 @@ class Controlador():
 
     def on_end_result(self, client, userdata, message):
         self.print_("Recebendo resultado final")
-        # # Rebendo id e a acurácia do cliente
-        # dados = json.loads(message.payload.decode())
-        # client_id = dados["client_id"]
-        # accuracy = dados["accuracy"]
+        # Rebendo id e a acurácia do cliente
+        dados = json.loads(message.payload.decode())
+        client_id = dados["client_id"]
+        accuracy = dados["accuracy"]
 
-        # self.acuracias.append(accuracy)
+        self.acuracias.append(accuracy)
 
 
-        # if len(self.acuracias) == self.min_clients_to_train:
-        #     s = 0
-        #     for a in self.acuracias:
-        #         s += a
-        #     s = s/len(self.acuracias)
+        if len(self.acuracias) == self.min_clients_to_train:
+            s = 0
+            for a in self.acuracias:
+                s += a
+            s = s/len(self.acuracias)
             
-        #     self.print_("Média global de acurácia: {}".format(s))
-        #     self.print_("Encerrando controlador")
-        #     self.cliente.loop_stop()
-        #     exit()
+            self.print_("Média global de acurácia: {}".format(s))
+            self.print_("Encerrando controlador")
+            self.cliente.loop_stop()
+            exit()
 
     
     def evaluate(self):
