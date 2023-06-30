@@ -20,7 +20,7 @@ Para executar o código, basta rodar o shell script up.sh, que irá criar o cont
 ```
 
 
-Para gerar os gráficos, basta executar: 
+Para gerar os gráficos (o OS não permitiu gráficos serem gerados pelo matplolib sem estar sendo executado na thread principal), basta executar: 
     
     ```bash
     python3 gerar_graficos.py
