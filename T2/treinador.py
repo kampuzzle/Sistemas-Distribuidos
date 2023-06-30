@@ -85,6 +85,9 @@ class Treinador():
         self.print_("Treinando com o dataset {}".format(self.dataset_number))
         self.model.fit(X, y, epochs=1)
 
+
+        
+
         self.acuracias.append(self.evaluate())
         self.print_("Acurácia: {}".format(self.acuracias[-1]))
 
@@ -126,9 +129,9 @@ class Treinador():
             self.publicar('sd/end_result', json.dumps({"client_id": self.id, "accuracy": accuracy}))
             
             time.sleep(5)
-            # armazenar cada valor de acuracia e round no formato round,acuracia
-            df = pd.DataFrame(self.acuracias)
-            df.to_csv("graficos_clients/acuracias_{}.csv".format(self.id))
+        # armazenar cada valor de acuracia e round no formato round,acuracia
+        df = pd.DataFrame(self.acuracias)
+        df.to_csv("graficos_clients/acuracias_{}.csv".format(self.id))
        
         time.sleep(2)
         self.print_("Cliente desconectado")

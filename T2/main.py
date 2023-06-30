@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 NUM_CLIENTS = 5 # Número de clientes a serem criados
 MIN_CLIENT_TO_TRAIN = 3 # Quantidade mínima de clientes participando em cada round
 MAX_ROUNDS = 15 # Quantidade máxima de rounds necessários para concluir o treinamento
-TARGET_ACCURACY = 0.99 # Meta de acurácia
+TARGET_ACCURACY = 0.999 # Meta de acurácia
 
 
 
@@ -45,12 +45,3 @@ if __name__ == "__main__":
 
     print("Finalizando")
 
-    # gera os graficos dos clientes
-    for c in clientes:
-        file = pd.read_csv("graficos_clients/acuracias_{}.csv".format(c.id))
-        plt.plot(file)
-        plt.title("Acuracia do cliente {}".format(c.id))
-        plt.title("Acuracia do cliente {}".format(c.id))
-        plt.xlabel("Rounds")
-        plt.ylabel("Acuracia")
-        plt.savefig("graficos_clients/acuracia_{}.png".format(c.id))

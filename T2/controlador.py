@@ -114,7 +114,7 @@ class Controlador():
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
             
             elif round >= self.max_rounds:
-                self.print_("Número máximo de rodadas ating ido. Encerrando treinamento")
+                self.print_("Número máximo de rodadas atingido. Encerrando treinamento")
                 self.publicar('sd/stop_training', json.dumps({"round": round}))
                 
             else: 
