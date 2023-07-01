@@ -1,4 +1,4 @@
-# Trabalho T1 – Implementação de Aprendizado Federado
+# Trabalho T2 – Implementação de Aprendizado Federado Serveless com MQTT
 
 ## Instruções para execução do código 
 
@@ -29,7 +29,7 @@ Para gerar os gráficos (o OS não permitiu gráficos serem gerados pelo matplol
 
 ## Vídeo executando e mostrando uma análise
 
-https://youtu.be/5E5stN3CJ54
+[https://youtu.be/5E5stN3CJ54](https://youtu.be/VJ08hQ-tnag](https://youtu.be/VJ08hQ-tnag)
 
 ---
 
