@@ -82,7 +82,7 @@ Cliente 4:
 ![Gráfico do cliente 4](graficos_clients/acuracia_41900.png)
 
 
-Foi dado um limite de 
+
 ---
 
 ## Conclusão
