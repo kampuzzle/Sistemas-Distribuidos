@@ -3,6 +3,7 @@ import random
 from paho.mqtt import client as mqtt
 import time 
 import json
+from Crypto.PublicKey import RSA
 
 from controlador import Controlador
 from minerador import Minerador
@@ -16,7 +17,12 @@ ENDC = '\033[m'
 class Cliente(): 
     # Inicializar o cliente com um id aleatório e se conectar ao broker
     def __init__(self, broker: str, n: int):
-        self.id = random.randint(0, 65536)
+        self.id = random.randint(0,100000)
+        
+        # self.node id é um hexadecimal aleatorio que repersenta um numero de 32 bits (binario)
+        self.node_id = random.randint(0, 2**32 - 1)
+        self.node_id = hex(self.node_id)
+
         self.broker = broker
         self.client = mqtt.Client(str(self.id))
        
@@ -25,6 +31,20 @@ class Cliente():
         self.min_clients = n
         self.clients_on_network = []
         self.tabela_votos = {}
+
+        self.private_key, self.public_key = self.generate_public_private_key()
+
+    # Define the function
+    def generate_public_private_key(self):
+        self.print_("Gerando chaves RSA")
+        # Generate a 1024-bit RSA key pair
+        key = RSA.generate(1024)
+        # Extract the public and private keys
+        public_key = key.publickey().exportKey()
+        private_key = key.exportKey()
+        # Return the keys as a tuple
+        return (public_key, private_key)
+
 
     def print_(self, texto):
         print(RED, "Cliente ", self.id, ENDC, " | ", texto)
@@ -38,7 +58,7 @@ class Cliente():
         self.client.message_callback_add(fila, callback)
 
     def votar(self):
-        vote = random.randint(0, len(self.clients_on_network) -1)
+        vote = random.randint(0, len(self.clients_on_network.keys()) -1)
         msg = json.dumps({"client_id": self.id, 
                           "vote": self.clients_on_network[vote]
                         })
@@ -71,14 +91,14 @@ class Cliente():
                     vencedor = id_votado
         self.print_("O vencedor é " + str(vencedor))
         self.tabela_votos = {}
-        self.clients_on_network = []
+        self.clients_on_network = {}
 
         self.controller = vencedor
 
 
     def on_init(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
-        self.clients_on_network.append(message["client_id"])
+        self.clients_on_network[message["node_id"]] = None
 
         # Se o número de clientes na rede for maior que min_clients,
         # publicar uma mensagem de votação na fila sd/voting
@@ -93,11 +113,16 @@ class Cliente():
             self.definir_vencedor()
             self.tabela_votos = {}
 
+    def on_pubkey(self, client, userdata, message):
+        message = json.loads(message.payload.decode('utf-8'))
+        self.public_key = message["public_key"]
+
 
     def on_connect(self, client, userdata, flags, rc):
         self.print_("Conectado ao broker")
-        self.assinar("sd/initVoting", self.on_init)
+        self.assinar("sd/init", self.on_init)
         self.assinar("sd/voting", self.on_voting)
+        self.assinar("sd/pubkey", self.on_pubkey)")
   
 
     def start(self): 
@@ -107,7 +132,7 @@ class Cliente():
         
         self.print_(texto="Iniciando o cliente")
         time.sleep(2)
-        self.client.publish("sd/initVoting", json.dumps({"client_id": self.id}))
+        self.client.publish("sd/init", json.dumps({"node_id": self.node_id}))
 
         while True:
             time.sleep(0.01)
