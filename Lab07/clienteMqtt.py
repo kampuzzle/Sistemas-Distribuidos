@@ -108,14 +108,24 @@ class Cliente():
     
     def on_voting(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
-        self.tabela_votos[message["client_id"]] = message["vote"]
+
+        public_key = message["public_key"]
+        node_id = message["node_id"]
+
+
+
+        self.tabela_votos[node_id] = message["vote"] 
         if len(self.tabela_votos) == len(self.clients_on_network):
             self.definir_vencedor()
             self.tabela_votos = {}
 
     def on_pubkey(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
-        self.public_key = message["public_key"]
+        node_id = message["node_id"]
+        public_key = message["public_key"]
+        # Armazenar a chave pública do nó na lista de nós
+        self.clients_on_network[node_id] = public_key
+
 
 
     def on_connect(self, client, userdata, flags, rc):
