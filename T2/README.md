@@ -71,20 +71,20 @@ Nesse treinamento, utilizamos quatro clientes, a seguir estarão os gráficos da
 
 Cliente 1:
 
-![Gráfico do cliente 1](graficos_clients/acuracia_2323.png)
+![Gráfico do cliente 1](graficos_clients_antigo/acuracia_2323.png)
 
 Cliente 2:
 
-![Gráfico do cliente 2](graficos_clients/acuracia_15956.png)
+![Gráfico do cliente 2](graficos_clients_antigo/acuracia_15956.png)
 
 Cliente 3:
 
-![Gráfico do cliente 3](graficos_clients/acuracia_18366.png)
+![Gráfico do cliente 3](graficos_clients_antigo/acuracia_18366.png)
 
 
 Cliente 4:
 
-![Gráfico do cliente 4](graficos_clients/acuracia_41900.png)
+![Gráfico do cliente 4](graficos_clients_antigo/acuracia_41900.png)
 
 
 
