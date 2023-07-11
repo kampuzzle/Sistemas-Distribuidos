@@ -59,8 +59,12 @@ class Cliente():
 
     def votar(self):
         vote = random.randint(0, len(self.clients_on_network.keys()) -1)
-        msg = json.dumps({"client_id": self.id, 
-                          "vote": self.clients_on_network[vote]
+
+        signature = self.assinar_mensagem(self.private_key, self.clients_on_network[vote])
+
+        msg = json.dumps({"node_id": self.node_id, 
+                          "vote": self.clients_on_network[vote], 
+                          "signature": signature
                         })
         self.publicar("sd/voting", msg)
         
@@ -68,6 +72,31 @@ class Cliente():
             self.tabela_votos[self.clients_on_network[vote]] = 0
         self.tabela_votos[self.clients_on_network[vote]] += 1 
         
+    def assinar_mensagem(private_key, message):
+        signature = private_key.sign(
+            message,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        return signature
+
+    def verificar_assinatura(public_key, message, signature):
+        try:
+            public_key.verify(
+                signature,
+                message,
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+            return True
+        except InvalidSignature:
+            return False
 
     def definir_vencedor(self):
         contagem_votos = {}
@@ -109,15 +138,20 @@ class Cliente():
     def on_voting(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
 
-        public_key = message["public_key"]
         node_id = message["node_id"]
+        signature = message["signature"]
 
+        vote = message["vote"]
 
-
-        self.tabela_votos[node_id] = message["vote"] 
+        if self.verificar_assinatura(self.clients_on_network[node_id], message["vote"], signature) == False:
+            self.print_("Assinatura inválida")
+            return
+        
+        self.tabela_votos[node_id] = message["vote"]
         if len(self.tabela_votos) == len(self.clients_on_network):
             self.definir_vencedor()
             self.tabela_votos = {}
+            
 
     def on_pubkey(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
