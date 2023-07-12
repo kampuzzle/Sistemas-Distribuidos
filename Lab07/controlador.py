@@ -8,6 +8,9 @@ import sys
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import serialization
+import binascii
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 
 BLUE = '\033[34m'
@@ -28,6 +31,10 @@ def assinar_mensagem(private_key, message):
     return signature
 
 def verificar_assinatura(public_key, message, signature):
+
+    public_key = binascii.unhexlify(public_key)
+
+    public_key = load_pem_public_key(public_key)
     try:
         public_key.verify(
             signature,
@@ -78,8 +85,9 @@ class Controlador():
         transaction_id = len(self.tabela)
         challenge = random.randint(15, 20)
         self.tabela.append([transaction_id, challenge, None, -1])
-        signature = assinar_mensagem(self.private_key, bytes(str(challenge)))
-        mensagem = json.dumps({"transaction_id": transaction_id, "challenge": str(challenge), "signature": signature.hex()})
+        signature = assinar_mensagem(self.private_key, bytes(challenge))
+
+        mensagem = json.dumps({"transaction_id": transaction_id, "client_id":self.node_id,  "challenge": challenge, "signature": signature.hex()})
         print("Desafio gerado: ", mensagem)
         self.publicar('sd/challenge', mensagem)
         self.print_("Desafio {} gerado!".format(transaction_id))
@@ -98,7 +106,7 @@ class Controlador():
     # Definir uma função de callback para receber as soluções dos mineradores na fila sd/solution
     def on_solution(self, client, userdata, message):
         self.print_("Recebi uma solução!")
-        dados = json.loads(message.payload.decode())
+        dados = json.loads(message.payload.decode('utf-8'))
 
         signature = dados["signature"]
         message = dados["solution"]
@@ -106,17 +114,17 @@ class Controlador():
         public_key = self.clients_on_network[dados["client_id"]]
 
         # Verificando assinatura
-        if not verificar_assinatura(public_key, message, binascii.unhexlify(signature)):
+        if not verificar_assinatura(public_key, message.encode(), binascii.unhexlify(signature)):
             self.print_("Assinatura inválida!")
             return
 
         client_id = dados["client_id"]
         transaction_id = dados["transaction_id"]
         solucao = dados["solution"]
-
-        signature = assinar_mensagem(self.private_key, bytes(str(solucao)))
+        
 
         if self.tabela[transaction_id][3] != -1:
+            signature = assinar_mensagem(self.private_key, bytes(0))
             mensagem = json.dumps({"client_id": self.tabela[transaction_id][3], "transaction_id": transaction_id,
                                 "solution": solucao, "result": 0, "signature": signature.hex()})
             self.publicar(f'sd/{client_id}/result', mensagem)
@@ -132,7 +140,7 @@ class Controlador():
             else:
                 result = 0
                 
-            signature = assinar_mensagem(self.private_key, bytes(str(solucao)))    
+            signature = assinar_mensagem(self.private_key, bytes(result))
             
             mensagem = json.dumps({"client_id": client_id, "transaction_id": transaction_id,
                                 "solution": solucao, "result": result, "signature": signature.hex()})

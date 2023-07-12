@@ -20,7 +20,13 @@ from cryptography.hazmat.primitives.serialization import load_pem_public_key
 RED = '\033[31m'
 ENDC = '\033[m'
 
-
+def convert_to_integer(string):
+    try:
+        ascii_values = [str(ord(char)) for char in string]
+        integer = int(''.join(ascii_values))
+        return integer
+    except:
+        return 0
 
 class Cliente(): 
     # Inicializar o cliente com um id aleatório e se conectar ao broker
@@ -35,6 +41,7 @@ class Cliente():
         self.client = mqtt.Client(str(self.id))
        
         self.controller = None
+
 
         self.min_clients = n
         self.clients_on_network = {}	
@@ -66,17 +73,11 @@ class Cliente():
         vote = random.randint(0, len(self.clients_on_network.keys()) -1)
         vote = list(self.clients_on_network.keys())[vote]
 
-        try:
-            a = bytes(self.clients_on_network[vote])
-        except:
-            self.print_("Erro ao converter o voto para bytes")
-            self.print_(self.clients_on_network[vote])
-            exit()
 
-        signature = self.assinar_mensagem(self.private_key, bytes(self.clients_on_network[vote]))
+        signature = self.assinar_mensagem(self.private_key, bytes(vote, 'utf-8'))
 
         msg = json.dumps({"node_id": self.node_id, 
-                          "vote": self.clients_on_network[vote], 
+                          "vote": vote, 
                           "signature": signature.hex()
                         })
         self.publicar("sd/voting", msg)
@@ -97,6 +98,11 @@ class Cliente():
         return signature
 
     def verificar_assinatura(self, public_key, message, signature):
+
+        public_key = binascii.unhexlify(public_key)
+
+        public_key = load_pem_public_key(public_key)
+
         try:
             public_key.verify(
                 signature,
@@ -129,7 +135,7 @@ class Cliente():
                 maximo = count
                 vencedor = id_votado
             elif count == maximo:
-                if id_votado > vencedor: 
+                if convert_to_integer(id_votado) > convert_to_integer(vencedor): 
                     vencedor = id_votado
         self.print_("O vencedor é " + str(vencedor))
         self.tabela_votos = {}
@@ -143,11 +149,7 @@ class Cliente():
         self.clients_on_network[message["node_id"]] = None
         
 
-        # Se o número de clientes na rede for maior que min_clients,
-        # publicar uma mensagem de votação na fila sd/voting
-        if len(self.clients_on_network) >= self.min_clients:
-            self.votar()
-
+    
     
     def on_voting(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
@@ -156,8 +158,8 @@ class Cliente():
         signature = message["signature"]
 
         vote = message["vote"]
-
-        if not self.verificar_assinatura(self.clients_on_network[node_id], message["vote"], binascii.unhexlify(signature)):
+        
+        if not self.verificar_assinatura(self.clients_on_network[node_id], vote.encode(), binascii.unhexlify(signature)):
             self.print_("Assinatura inválida")
             return
         
@@ -172,7 +174,6 @@ class Cliente():
         node_id = message["node_id"]
         public_key = message["public_key"]
 
-        self.print_("Recebida a chave pública do nó " + str(node_id))
 
         self.clients_on_network[node_id] = public_key
         # Armazenar a chave pública do nó na lista de nós
@@ -201,17 +202,20 @@ class Cliente():
         time.sleep(1.5)
         self.client.publish("sd/pubkey", json.dumps({"node_id": self.node_id, "public_key": public_key_bytes.hex()}))
 
+        self.votar()
+
         while True:
             time.sleep(0.01)
             
             if self.controller is not None:
                 break
         
-        if self.controller == self.id:
+        if self.controller == self.node_id:
             c =  Controlador(self.broker,self.id, self.client, self.node_id, self.clients_on_network,self.private_key )
             c.start() 
         else:
-            m = Minerador(self.broker, self.id, self.client)
+            controller_public_key = self.clients_on_network[self.controller]
+            m = Minerador(self.broker, self.id, self.client, self.node_id, self.clients_on_network, self.private_key, controller_public_key )
             m.start()
 
 

@@ -43,7 +43,6 @@ class Controlador():
         challenge = random.randint(15, 20)
         self.tabela.append([transaction_id, challenge, None, -1])
         mensagem = json.dumps({"transaction_id": transaction_id, "challenge": challenge})
-        print("Desafio gerado: ", mensagem)
         self.publicar('sd/challenge', mensagem)
         self.print_("Desafio {} gerado!".format(transaction_id))
 

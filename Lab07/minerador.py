@@ -4,6 +4,9 @@ import hashlib
 import random
 import string
 import sys
+from cryptography.hazmat.primitives import serialization
+import binascii
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
@@ -24,6 +27,10 @@ def assinar_mensagem(private_key, message):
     )
     return signature
 def verificar_assinatura(public_key, message, signature):
+
+    public_key = binascii.unhexlify(public_key)
+
+    public_key = load_pem_public_key(public_key)
     try:
         public_key.verify(
             signature,
@@ -40,11 +47,12 @@ def verificar_assinatura(public_key, message, signature):
 
 class Minerador():
     # Inicializar o minerador com uma tabela vazia de transações e assinar as filas sd/challenge e sd/result
-    def __init__(self, broker, id_client, client, node_id, clients_on_network, private_key):
+    def __init__(self, broker, id_client, client, node_id, clients_on_network, private_key, controller_key):
         self.tabela = []
         self.endereco = broker 
         self.cliente = client
-        self.id = id_client
+        self.node_id = id_client
+        self.controller_key = controller_key
         self.node_id = node_id
         self.clients_on_network = clients_on_network
         self.private_key = private_key
@@ -66,7 +74,7 @@ class Minerador():
 
 
     def print_(self, texto):
-        print(YELLOW,"Minerador ", self.id,ENDC, " | ", texto)
+        print(YELLOW,"Minerador ", self.node_id,ENDC, " | ", texto)
 
     # Definir uma função para gerar uma solução aleatória para um desafio
     def gerar_solucao(self, challenge):
@@ -83,14 +91,15 @@ class Minerador():
         self.print_("Recebi um desafio!")
 
 
-        dados = json.loads(message.payload.decode())
+        dados = json.loads(message.payload.decode('utf-8'))
 
         # Verificando a assinatura
         signature = dados["signature"]
         challenge = dados["challenge"]
 
-        public_key = self.clients_on_network[dados["client_id"]]["public_key"]
-        if not verificar_assinatura(public_key, challenge, binascii.unhexlify(signature)):
+        public_key = self.clients_on_network[dados["client_id"]]
+
+        if not verificar_assinatura(public_key, bytes(challenge), binascii.unhexlify(signature)):
             self.print_("Assinatura inválida!")
             return
 
@@ -101,8 +110,8 @@ class Minerador():
         self.tabela[transaction_id][1] = challenge
         solucao = self.gerar_solucao(challenge)
         self.tabela[transaction_id][2] = solucao
-        signature = assinar_mensagem(self.private_key, bytes(solucao))
-        mensagem = json.dumps({"client_id": self.id, "transaction_id": transaction_id,
+        signature = assinar_mensagem(self.private_key, solucao.encode())
+        mensagem = json.dumps({"client_id": self.node_id, "transaction_id": transaction_id,
                             "solution": solucao, "signature":signature.hex()})
         self.print_("Enviando solução: {}".format(mensagem))
         self.publicar('sd/solution', mensagem)
@@ -110,30 +119,31 @@ class Minerador():
         
     def on_connect(self, client, userdata, flags, rc):
         self.assinar('sd/challenge', self.on_challenge)
-        self.assinar('sd/{}/result'.format(self.id), self.on_result)
+        self.assinar('sd/{}/result'.format(self.node_id), self.on_result)
 
 
     # Definir uma função de callback para receber os resultados do controlador na fila sd/result
     def on_result(self, client, userdata, message):
-        dados = json.loads(message.payload.decode())
+        dados = json.loads(message.payload.decode('utf-8'))
         self.print_("Recebi um resultado!")
 
         # Verificando a assinatura
         signature = dados["signature"]
-        message = dados["message"]
-        public_key = self.clients_on_network[dados["client_id"]]["public_key"]
-        if not verificar_assinatura(public_key, message, binascii.unhexlify(signature)):
+        solucao = dados["solution"]
+        result = dados["result"]
+
+    
+        if not verificar_assinatura(self.controller_key, bytes(result), binascii.unhexlify(signature)):
             self.print_("Assinatura inválida!")
             return
 
         client_id = dados["client_id"]
         transaction_id = dados["transaction_id"]
-        solucao = dados["solution"]
-        result = dados["result"]
+       
         if result == 1:
             self.print_("Solução aceita!")
             self.tabela[transaction_id][3] = client_id
-        elif result == 0 and client_id == self.id:
+        elif result == 0 and client_id == self.node_id:
             self.print_("Solução rejeitada!")
         else:
             self.print_("Solução rejeitada! Problema resolvido por: {}".format(client_id))
