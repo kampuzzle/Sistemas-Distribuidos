@@ -3,10 +3,18 @@ import random
 from paho.mqtt import client as mqtt
 import time 
 import json
-from Crypto.PublicKey import RSA
-
+from cryptography.hazmat.primitives.asymmetric import rsa
 from controlador import Controlador
 from minerador import Minerador
+
+
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+
+from cryptography.hazmat.primitives import serialization
+import binascii
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 
 RED = '\033[31m'
@@ -29,22 +37,19 @@ class Cliente():
         self.controller = None
 
         self.min_clients = n
-        self.clients_on_network = []
+        self.clients_on_network = {}	
         self.tabela_votos = {}
 
         self.private_key, self.public_key = self.generate_public_private_key()
 
     # Define the function
     def generate_public_private_key(self):
-        self.print_("Gerando chaves RSA")
-        # Generate a 1024-bit RSA key pair
-        key = RSA.generate(1024)
-        # Extract the public and private keys
-        public_key = key.publickey().exportKey()
-        private_key = key.exportKey()
-        # Return the keys as a tuple
-        return (public_key, private_key)
-
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=1024
+        )
+        public_key = private_key.public_key()
+        return private_key, public_key
 
     def print_(self, texto):
         print(RED, "Cliente ", self.id, ENDC, " | ", texto)
@@ -59,12 +64,20 @@ class Cliente():
 
     def votar(self):
         vote = random.randint(0, len(self.clients_on_network.keys()) -1)
+        vote = list(self.clients_on_network.keys())[vote]
 
-        signature = self.assinar_mensagem(self.private_key, self.clients_on_network[vote])
+        try:
+            a = bytes(self.clients_on_network[vote])
+        except:
+            self.print_("Erro ao converter o voto para bytes")
+            self.print_(self.clients_on_network[vote])
+            exit()
+
+        signature = self.assinar_mensagem(self.private_key, bytes(self.clients_on_network[vote]))
 
         msg = json.dumps({"node_id": self.node_id, 
                           "vote": self.clients_on_network[vote], 
-                          "signature": signature
+                          "signature": signature.hex()
                         })
         self.publicar("sd/voting", msg)
         
@@ -72,7 +85,7 @@ class Cliente():
             self.tabela_votos[self.clients_on_network[vote]] = 0
         self.tabela_votos[self.clients_on_network[vote]] += 1 
         
-    def assinar_mensagem(private_key, message):
+    def assinar_mensagem(self, private_key, message):
         signature = private_key.sign(
             message,
             padding.PSS(
@@ -83,7 +96,7 @@ class Cliente():
         )
         return signature
 
-    def verificar_assinatura(public_key, message, signature):
+    def verificar_assinatura(self, public_key, message, signature):
         try:
             public_key.verify(
                 signature,
@@ -120,14 +133,15 @@ class Cliente():
                     vencedor = id_votado
         self.print_("O vencedor é " + str(vencedor))
         self.tabela_votos = {}
-        self.clients_on_network = {}
 
         self.controller = vencedor
 
 
     def on_init(self, client, userdata, message):
         message = json.loads(message.payload.decode('utf-8'))
+    
         self.clients_on_network[message["node_id"]] = None
+        
 
         # Se o número de clientes na rede for maior que min_clients,
         # publicar uma mensagem de votação na fila sd/voting
@@ -143,7 +157,7 @@ class Cliente():
 
         vote = message["vote"]
 
-        if self.verificar_assinatura(self.clients_on_network[node_id], message["vote"], signature) == False:
+        if not self.verificar_assinatura(self.clients_on_network[node_id], message["vote"], binascii.unhexlify(signature)):
             self.print_("Assinatura inválida")
             return
         
@@ -157,16 +171,19 @@ class Cliente():
         message = json.loads(message.payload.decode('utf-8'))
         node_id = message["node_id"]
         public_key = message["public_key"]
-        # Armazenar a chave pública do nó na lista de nós
+
+        self.print_("Recebida a chave pública do nó " + str(node_id))
+
         self.clients_on_network[node_id] = public_key
+        # Armazenar a chave pública do nó na lista de nós
 
 
 
     def on_connect(self, client, userdata, flags, rc):
         self.print_("Conectado ao broker")
         self.assinar("sd/init", self.on_init)
+        self.assinar("sd/pubkey", self.on_pubkey)
         self.assinar("sd/voting", self.on_voting)
-        self.assinar("sd/pubkey", self.on_pubkey)")
   
 
     def start(self): 
@@ -175,8 +192,14 @@ class Cliente():
         self.client.loop_start()
         
         self.print_(texto="Iniciando o cliente")
-        time.sleep(2)
+        time.sleep(1.5)
+        public_key_bytes = self.public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
         self.client.publish("sd/init", json.dumps({"node_id": self.node_id}))
+        time.sleep(1.5)
+        self.client.publish("sd/pubkey", json.dumps({"node_id": self.node_id, "public_key": public_key_bytes.hex()}))
 
         while True:
             time.sleep(0.01)
@@ -185,7 +208,7 @@ class Cliente():
                 break
         
         if self.controller == self.id:
-            c =  Controlador(self.broker,self.id, self.client)
+            c =  Controlador(self.broker,self.id, self.client, self.node_id, self.clients_on_network,self.private_key )
             c.start() 
         else:
             m = Minerador(self.broker, self.id, self.client)

@@ -5,18 +5,53 @@ import random
 import string
 import sys
 
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+
+
 YELLOW = '\033[33m'
 ENDC = '\033[m'
 
+def assinar_mensagem(private_key, message):
+    signature = private_key.sign(
+        message,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    return signature
+def verificar_assinatura(public_key, message, signature):
+    try:
+        public_key.verify(
+            signature,
+            message,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        return True
+    except InvalidSignature:
+        return False
 
 class Minerador():
     # Inicializar o minerador com uma tabela vazia de transações e assinar as filas sd/challenge e sd/result
-    def __init__(self, broker, id_client, client):
+    def __init__(self, broker, id_client, client, node_id, clients_on_network, private_key):
         self.tabela = []
         self.endereco = broker 
         self.cliente = client
         self.id = id_client
+        self.node_id = node_id
+        self.clients_on_network = clients_on_network
+        self.private_key = private_key
+
         self.print_("Minerador iniciado")
+
+
 
 
     
@@ -46,17 +81,29 @@ class Minerador():
     # Definir uma função de callback para receber os desafios do controlador na fila sd/challenge
     def on_challenge(self, client, userdata, message):
         self.print_("Recebi um desafio!")
+
+
         dados = json.loads(message.payload.decode())
-        transaction_id = dados["transaction_id"]
+
+        # Verificando a assinatura
+        signature = dados["signature"]
         challenge = dados["challenge"]
+
+        public_key = self.clients_on_network[dados["client_id"]]["public_key"]
+        if not verificar_assinatura(public_key, challenge, binascii.unhexlify(signature)):
+            self.print_("Assinatura inválida!")
+            return
+
+        transaction_id = dados["transaction_id"]
         while len(self.tabela) <= transaction_id:
             self.tabela.append([None, None, None, -1])
         self.tabela[transaction_id][0] = transaction_id
         self.tabela[transaction_id][1] = challenge
         solucao = self.gerar_solucao(challenge)
         self.tabela[transaction_id][2] = solucao
+        signature = assinar_mensagem(self.private_key, bytes(solucao))
         mensagem = json.dumps({"client_id": self.id, "transaction_id": transaction_id,
-                            "solution": solucao})
+                            "solution": solucao, "signature":signature.hex()})
         self.print_("Enviando solução: {}".format(mensagem))
         self.publicar('sd/solution', mensagem)
 
@@ -70,6 +117,14 @@ class Minerador():
     def on_result(self, client, userdata, message):
         dados = json.loads(message.payload.decode())
         self.print_("Recebi um resultado!")
+
+        # Verificando a assinatura
+        signature = dados["signature"]
+        message = dados["message"]
+        public_key = self.clients_on_network[dados["client_id"]]["public_key"]
+        if not verificar_assinatura(public_key, message, binascii.unhexlify(signature)):
+            self.print_("Assinatura inválida!")
+            return
 
         client_id = dados["client_id"]
         transaction_id = dados["transaction_id"]
